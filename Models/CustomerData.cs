@@ -13,13 +13,19 @@ namespace RideWild.Models
         public string Email { get; set; }
 
         [Required]
+        [MinLength(5)]
+        [MaxLength(256)]
         public string PasswordHash { get; set; }
 
         [Required]
+        [MinLength(5)]
+        [MaxLength(10)]
         public string Salt { get; set; }
 
         [Required]
         [Phone]
+        [MinLength(5)]
+        [MaxLength(30)]
         public string PhoneNumber { get; set; }
 
         [Required]

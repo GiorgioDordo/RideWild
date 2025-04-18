@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RideWild.Models;
 
@@ -10,9 +11,11 @@ using RideWild.Models;
 namespace RideWild.Migrations
 {
     [DbContext(typeof(AdventureWorkDataContext))]
-    partial class AdventureWorkDataContextModelSnapshot : ModelSnapshot
+    [Migration("20250418152022_Update4CutomerDataMigration")]
+    partial class Update4CutomerDataMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

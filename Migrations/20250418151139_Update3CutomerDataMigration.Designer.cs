@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RideWild.Models;
 
@@ -10,9 +11,11 @@ using RideWild.Models;
 namespace RideWild.Migrations
 {
     [DbContext(typeof(AdventureWorkDataContext))]
-    partial class AdventureWorkDataContextModelSnapshot : ModelSnapshot
+    [Migration("20250418151139_Update3CutomerDataMigration")]
+    partial class Update3CutomerDataMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,17 +43,14 @@ namespace RideWild.Migrations
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("Salt")
                         .IsRequired()
-                        .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
                     b.HasKey("Id");
