@@ -19,6 +19,9 @@ namespace RideWild
             builder.Services.AddDbContext<AdventureWorksLt2019Context>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("AdventureWorkLT2019")));
 
+            builder.Services.AddDbContext<AdventureWorkDataContext>(options =>
+options.UseSqlServer(builder.Configuration.GetConnectionString("AdventureWorksDatas")));
+
 
             var app = builder.Build();
 
