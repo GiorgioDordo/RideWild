@@ -1,4 +1,7 @@
 
+using Microsoft.EntityFrameworkCore;
+using RideWild.Models;
+
 namespace RideWild
 {
     public class Program
@@ -13,7 +16,13 @@ namespace RideWild
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
+            builder.Services.AddDbContext<AdventureWorksLt2019Context>(options =>
+options.UseSqlServer(builder.Configuration.GetConnectionString("AdventureWorkLT2019")));
+
+
             var app = builder.Build();
+
+
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
