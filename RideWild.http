@@ -1,0 +1,6 @@
+@RideWild_HostAddress = http://localhost:5048
+
+GET {{RideWild_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
