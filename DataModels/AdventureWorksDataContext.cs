@@ -32,7 +32,7 @@ public partial class AdventureWorksDataContext : DbContext
             entity.Property(e => e.EmaiAddress).HasMaxLength(50);
             entity.Property(e => e.Name).HasMaxLength(50);
             entity.Property(e => e.PasswordHash).HasMaxLength(256);
-            entity.Property(e => e.PasswordSalt).HasMaxLength(10);
+            entity.Property(e => e.PasswordSalt).HasMaxLength(40);
 
             entity.HasOne(d => d.Role).WithMany(p => p.AuthUsers)
                 .HasForeignKey(d => d.RoleId)
@@ -48,7 +48,7 @@ public partial class AdventureWorksDataContext : DbContext
             entity.Property(e => e.AddressLine).HasMaxLength(255);
             entity.Property(e => e.EmailAddress).HasMaxLength(50);
             entity.Property(e => e.PasswordHash).HasMaxLength(256);
-            entity.Property(e => e.PasswordSalt).HasMaxLength(10);
+            entity.Property(e => e.PasswordSalt).HasMaxLength(40);
             entity.Property(e => e.PhoneNumber).HasMaxLength(255);
         });
 

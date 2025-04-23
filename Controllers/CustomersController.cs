@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RideWild.DataModels;
+using RideWild.DTO;
 using RideWild.Models;
 
 namespace RideWild.Controllers
@@ -14,10 +16,12 @@ namespace RideWild.Controllers
     public class CustomersController : ControllerBase
     {
         private readonly AdventureWorksLt2019Context _context;
+        private readonly AdventureWorksDataContext _contextData;
 
-        public CustomersController(AdventureWorksLt2019Context context)
+        public CustomersController(AdventureWorksLt2019Context context, AdventureWorksDataContext contextData)
         {
             _context = context;
+            _contextData = contextData;
         }
 
         // GET: api/Customers
@@ -75,12 +79,45 @@ namespace RideWild.Controllers
         // POST: api/Customers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
+        public async Task<ActionResult<CustomerDTO>> PostCustomer(CustomerDTO customer)
         {
-            _context.Customers.Add(customer);
+
+            var psw = SecurityLib.PasswordUtility.HashPassword(customer.Password);
+            
+            Customer newCustomer = new Customer
+            {
+                NameStyle = customer.NameStyle,
+                Title = customer.Title,
+                FirstName = customer.FirstName,
+                MiddleName = customer.MiddleName,
+                LastName = customer.LastName,
+                Suffix = customer.Suffix,
+                CompanyName = customer.CompanyName,
+                SalesPerson = customer.SalesPerson,
+                EmailAddress = "",
+                PasswordHash = "",
+                PasswordSalt = ""
+            };
+            _context.Customers.Add(newCustomer);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCustomer", new { id = customer.CustomerId }, customer);
+            var customerData = new CustomerData
+            {
+                Id = newCustomer.CustomerId,
+                EmailAddress = customer.EmailAddress,
+                PasswordHash = psw.Hash,
+                PasswordSalt = psw.Salt,
+                PhoneNumber = customer.Phone,
+                AddressLine = ""
+            };
+            _contextData.CustomerData.Add(customerData);
+            await _contextData.SaveChangesAsync();
+            return CreatedAtAction("GetCustomer", new { id = newCustomer.CustomerId }, customer);
+        }
+
+        private bool checkEmailExists(string email)
+        {
+            return _contextData.CustomerData.Any(e => e.EmailAddress == email) || _context.Customers.Any(e => e.EmailAddress == email);
         }
 
         // DELETE: api/Customers/5
