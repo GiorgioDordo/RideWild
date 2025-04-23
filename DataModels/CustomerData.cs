@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace RideWild.DataModels;
 
-public partial class CustomerDatum
+public partial class CustomerData
 {
     public long Id { get; set; }
 

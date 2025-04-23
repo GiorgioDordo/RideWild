@@ -17,7 +17,7 @@ public partial class AdventureWorksDataContext : DbContext
 
     public virtual DbSet<AuthUser> AuthUsers { get; set; }
 
-    public virtual DbSet<CustomerDatum> CustomerData { get; set; }
+    public virtual DbSet<CustomerData> CustomerData { get; set; }
 
     public virtual DbSet<LogError> LogErrors { get; set; }
 
@@ -44,7 +44,7 @@ public partial class AdventureWorksDataContext : DbContext
                 .HasConstraintName("authusers_roleid_foreign");
         });
 
-        modelBuilder.Entity<CustomerDatum>(entity =>
+        modelBuilder.Entity<CustomerData>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("customerdata_id_primary");
 
