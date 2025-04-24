@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using RideWild.DataModels;
 using RideWild.DTO;
 using RideWild.Models;
@@ -81,44 +82,96 @@ namespace RideWild.Controllers
         [HttpPost]
         public async Task<ActionResult<CustomerDTO>> PostCustomer(CustomerDTO customer)
         {
-
-            var psw = SecurityLib.PasswordUtility.HashPassword(customer.Password);
-            
-            Customer newCustomer = new Customer
+            if(checkEmailExists(customer.EmailAddress))
             {
-                NameStyle = customer.NameStyle,
-                Title = customer.Title,
-                FirstName = customer.FirstName,
-                MiddleName = customer.MiddleName,
-                LastName = customer.LastName,
-                Suffix = customer.Suffix,
-                CompanyName = customer.CompanyName,
-                SalesPerson = customer.SalesPerson,
-                EmailAddress = "",
-                PasswordHash = "",
-                PasswordSalt = ""
-            };
-            _context.Customers.Add(newCustomer);
-            await _context.SaveChangesAsync();
-
-            var customerData = new CustomerData
+                return Conflict("Email already exists");
+            }
+            else
             {
-                Id = newCustomer.CustomerId,
-                EmailAddress = customer.EmailAddress,
-                PasswordHash = psw.Hash,
-                PasswordSalt = psw.Salt,
-                PhoneNumber = customer.Phone,
-                AddressLine = ""
-            };
-            _contextData.CustomerData.Add(customerData);
-            await _contextData.SaveChangesAsync();
+                var psw = SecurityLib.PasswordUtility.HashPassword(customer.Password);
 
-            return CreatedAtAction("GetCustomer", new { id = newCustomer.CustomerId }, customer);
+                Customer newCustomer = new Customer
+                {
+                    NameStyle = customer.NameStyle,
+                    Title = customer.Title,
+                    FirstName = customer.FirstName,
+                    MiddleName = customer.MiddleName,
+                    LastName = customer.LastName,
+                    Suffix = customer.Suffix,
+                    CompanyName = customer.CompanyName,
+                    SalesPerson = customer.SalesPerson,
+                    EmailAddress = "",
+                    PasswordHash = "",
+                    PasswordSalt = ""
+                };
+                _context.Customers.Add(newCustomer);
+                await _context.SaveChangesAsync();
+
+                var customerData = new CustomerData
+                {
+                    Id = newCustomer.CustomerId,
+                    EmailAddress = customer.EmailAddress,
+                    PasswordHash = psw.Hash,
+                    PasswordSalt = psw.Salt,
+                    PhoneNumber = customer.Phone,
+                    AddressLine = ""
+                };
+                _contextData.CustomerData.Add(customerData);
+                await _contextData.SaveChangesAsync();
+
+                return CreatedAtAction("GetCustomer", new { id = newCustomer.CustomerId }, customer);
+            }
+           
+        }
+
+        [HttpPost("Login")]
+        public async Task<ActionResult<Customer>> LoginCustomer(LoginDTO loginDTO)
+        {
+            string email = loginDTO.EmailAddress;
+            string password = loginDTO.Password;
+
+            var customer = await _contextData.CustomerData
+                .Where(c => c.EmailAddress == email)
+                .FirstOrDefaultAsync();
+
+            if (customer == null)
+            {
+                var oldCustumer = await _context.Customers
+                    .Where(c => c.EmailAddress == email)
+                    .FirstOrDefaultAsync();
+                
+                if (oldCustumer == null)
+                {
+                    return NotFound("Account non esiste");
+                }
+                else
+                {
+                    return Conflict(new
+                    {
+                        message = email +"email registrata nel sistema vecchio",
+                        errorCode = "USER_EXISTS"
+                    });
+                }
+
+            }
+            else
+            {
+                var isValid = SecurityLib.PasswordUtility.VerifyPassword(password, customer.PasswordHash, customer.PasswordSalt);
+                if (isValid)
+                {
+                    return Ok(customer);
+                }
+                else
+                {
+                    return Unauthorized("Invalid password");
+                }
+            }
+
         }
 
         private bool checkEmailExists(string email)
         {
-            return _contextData.CustomerData.Any(e => e.EmailAddress == email) || _context.Customers.Any(e => e.EmailAddress == email);
+            return  _contextData.CustomerData.Any(e => e.EmailAddress == email);
         }
 
         // DELETE: api/Customers/5

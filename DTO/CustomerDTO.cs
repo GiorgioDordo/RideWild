@@ -17,7 +17,7 @@
 
         public string? SalesPerson { get; set; }
 
-        public string? EmailAddress { get; set; }
+        public string EmailAddress { get; set; } = null!;
 
         public string? Phone { get; set; }
 
