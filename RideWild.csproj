@@ -17,8 +17,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Library\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="SecurityLib">
-      <HintPath>..\..\..\..\Downloads\SecurityLib.dll</HintPath>
+      <HintPath>Library\SecurityLib.dll</HintPath>
     </Reference>
   </ItemGroup>
 

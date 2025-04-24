@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace RideWild
 {
+
     public class Program
     {
         public static void Main(string[] args)
