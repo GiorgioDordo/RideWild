@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <Reference Include="SecurityLib">
-      <HintPath>..\Accademy\SecurityLib\bin\Debug\net9.0\SecurityLib.dll</HintPath>
+      <HintPath>..\..\..\..\Downloads\SecurityLib.dll</HintPath>
     </Reference>
   </ItemGroup>
 
