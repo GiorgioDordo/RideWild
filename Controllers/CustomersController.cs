@@ -104,8 +104,32 @@ namespace RideWild.Controllers
                     PasswordHash = "",
                     PasswordSalt = ""
                 };
-                _context.Customers.Add(newCustomer);
-                await _context.SaveChangesAsync();
+                try
+                {
+                    _context.Customers.Add(newCustomer);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException dbEx)
+                {
+                    //DA CONTROLLARE
+                    var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+
+                    return Conflict(new
+                    {
+                        message = "Errore durante il salvataggio nel database.",
+                        details = innerMessage,
+                        errorCode = "CUSTOMER_INSERT_ERROR"
+                    });
+                }
+                catch (Exception ex)
+                {
+                    return Conflict(new
+                    {
+                        message = ex.Message,
+                        errorCode = "CUSTOMER_INSERT_ERROR"
+                    });
+                }
+                
 
                 var customerData = new CustomerData
                 {
@@ -124,6 +148,7 @@ namespace RideWild.Controllers
            
         }
 
+        // POST: api/Customers/Login
         [HttpPost("Login")]
         public async Task<ActionResult<Customer>> LoginCustomer(LoginDTO loginDTO)
         {
@@ -170,7 +195,8 @@ namespace RideWild.Controllers
         }
 
         /*
-         Insert a new address for a customer
+         * POST: api/Customers/Address
+         * Insert a new address for a customer
          */
         [HttpPost("Address")]
         public async Task<ActionResult<Address>> AddressCustomer(AddressDTO addressDTO)
@@ -200,7 +226,7 @@ namespace RideWild.Controllers
 
         }
 
-        // GET: api/Customers/5
+        // GET: api/Customers/Address/5
         [HttpGet("Address/{id}")]
         public async Task<ActionResult<Address>> GetAddressById(int id)
         {
