@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
 namespace RideWild.DataModels;
-
+// commento
 public partial class AdventureWorksDataContext : DbContext
 {
     public AdventureWorksDataContext()
