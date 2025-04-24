@@ -112,6 +112,7 @@ namespace RideWild.Controllers
             };
             _contextData.CustomerData.Add(customerData);
             await _contextData.SaveChangesAsync();
+
             return CreatedAtAction("GetCustomer", new { id = newCustomer.CustomerId }, customer);
         }
 
