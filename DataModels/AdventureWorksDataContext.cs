@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace RideWild.DataModels;
 // commento
+// new comment
 public partial class AdventureWorksDataContext : DbContext
 {
     public AdventureWorksDataContext()
