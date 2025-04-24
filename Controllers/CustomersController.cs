@@ -169,9 +169,57 @@ namespace RideWild.Controllers
 
         }
 
+        /*
+         Insert a new address for a customer
+         */
+        [HttpPost("Address")]
+        public async Task<ActionResult<Address>> AddressCustomer(AddressDTO addressDTO)
+        {
+            Address address = new Address
+            {
+                AddressLine1 = addressDTO.AddressLine1,
+                AddressLine2 = addressDTO.AddressLine2,
+                City = addressDTO.City,
+                StateProvince = addressDTO.StateProvince,
+                CountryRegion = addressDTO.CountryRegion,
+                PostalCode = addressDTO.PostalCode
+            };
+            _context.Addresses.Add(address);
+            await _context.SaveChangesAsync();
+
+            CustomerAddress customerAddress = new CustomerAddress
+            {
+                CustomerId = addressDTO.CustomerId,
+                AddressId = address.AddressId,
+                AddressType = addressDTO.AddressType,
+            };
+            _context.CustomerAddresses.Add(customerAddress);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("GetAddressById", new { id = address.AddressId }, address);
+
+        }
+
+        // GET: api/Customers/5
+        [HttpGet("Address/{id}")]
+        public async Task<ActionResult<Address>> GetAddressById(int id)
+        {
+            var address = await _context.Addresses.FindAsync(id);
+
+            if (address == null)
+            {
+                return NotFound();
+            }
+
+            return address;
+        }
+
+        /*
+         check if email exists
+         */
         private bool checkEmailExists(string email)
         {
-            return  _contextData.CustomerData.Any(e => e.EmailAddress == email);
+            return  _contextData.CustomerData.Any(e => e.EmailAddress == email) || _context.Customers.Any(e => e.EmailAddress == email);
         }
 
         // DELETE: api/Customers/5
