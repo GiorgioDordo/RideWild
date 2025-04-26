@@ -8,7 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using RideWild.DataModels;
 using RideWild.DTO;
+using RideWild.Interfaces;
 using RideWild.Models;
+
 
 namespace RideWild.Controllers
 {
@@ -18,11 +20,13 @@ namespace RideWild.Controllers
     {
         private readonly AdventureWorksLt2019Context _context;
         private readonly AdventureWorksDataContext _contextData;
+        private readonly IEmailService _emailService;
 
-        public CustomersController(AdventureWorksLt2019Context context, AdventureWorksDataContext contextData)
+        public CustomersController(AdventureWorksLt2019Context context, AdventureWorksDataContext contextData, IEmailService emailService)
         {
             _context = context;
             _contextData = contextData;
+            _emailService = emailService;
         }
 
         // GET: api/Customers
@@ -171,11 +175,16 @@ namespace RideWild.Controllers
                 }
                 else
                 {
+                    var subject = "Aggiornaento sistema";
+                    var emailContent = "Ciao, per un aggiornamento di sistema per accedere al tuo profilo devi reimpostare la password." + "Clicca sul link  sottostante per reimpostare la password: <a href='#' ";
+                    await _emailService.PswResetEmailAsync(email, subject, emailContent);
+
                     return Conflict(new
                     {
-                        message = email +"email registrata nel sistema vecchio",
+                        message = email + "email registrata nel sistema vecchio",
                         errorCode = "USER_EXISTS"
                     });
+
                 }
 
             }

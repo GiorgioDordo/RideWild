@@ -1,7 +1,9 @@
 
 using Microsoft.EntityFrameworkCore;
 using RideWild.DataModels;
+using RideWild.Interfaces;
 using RideWild.Models;
+using RideWild.Services;
 using System.Text.Json.Serialization;
 
 namespace RideWild
@@ -40,7 +42,7 @@ namespace RideWild
             builder.Services.AddDbContext<AdventureWorksLt2019Context>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("AdventureWorksLT2019")));
 
-
+            builder.Services.AddTransient<IEmailService, EmailService>();
 
             var app = builder.Build();
             app.UseCors("CORSPolicy");
