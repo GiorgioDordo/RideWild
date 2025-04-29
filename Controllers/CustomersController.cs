@@ -9,6 +9,8 @@ using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pag
 using RideWild.Models.DataModels;
 using RideWild.DTO;
 using RideWild.Models.AdventureModels;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace RideWild.Controllers
 {
@@ -246,6 +248,34 @@ namespace RideWild.Controllers
         private bool checkEmailExists(string email)
         {
             return  _contextData.CustomerData.Any(e => e.EmailAddress == email) || _context.Customers.Any(e => e.EmailAddress == email);
+        }
+
+        [Authorize]
+        [HttpGet("personalInfo")]
+        public async Task<ActionResult<Customer>> getPersonalInfo()
+        {
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("Vuoto");
+
+            if (!int.TryParse(userId, out int userIdInt))
+                return Unauthorized("Errore");
+
+            var customerWithAddress = await _context.Customers
+                .Where(c => c.CustomerId == userIdInt)
+                .Include(c => c.CustomerAddresses)
+                    .ThenInclude(ca => ca.Address)
+                .FirstOrDefaultAsync();
+
+            if (customerWithAddress == null)
+            {
+                return NotFound("Account non esiste");
+            }
+
+            return Ok(customerWithAddress);
+
         }
 
         // DELETE: api/Customers/5

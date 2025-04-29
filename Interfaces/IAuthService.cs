@@ -5,6 +5,7 @@ namespace RideWild.Interfaces
 {
     public interface IAuthService
     {
-        Task<AuthResult> LoginAsync(LoginDTO request);
+        Task<AuthResult> Login(LoginDTO request);
+        Task<AuthResult> Register(CustomerDTO request);
     }
 }

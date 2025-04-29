@@ -29,7 +29,7 @@ namespace RideWild.Services
             _emailService = emailService;
         }
 
-        public async Task<AuthResult> LoginAsync(LoginDTO request)
+        public async Task<AuthResult> Login(LoginDTO request)
         {
             string email = request.Email;
             string password = request.Password;
@@ -46,7 +46,7 @@ namespace RideWild.Services
 
                 if (oldCustumer == null)
                 {
-                    return AuthResult.FailureLogin("Account inesistente");
+                    return AuthResult.FailureAuth("Account inesistente");
                 }
                 else
                 {
@@ -54,7 +54,7 @@ namespace RideWild.Services
                     var emailContent = "Ciao, per un aggiornamento di sistema per accedere al tuo profilo devi reimpostare la password." + "Clicca sul link  sottostante per reimpostare la password: <a href='#' ";
                     await _emailService.PswResetEmailAsync(email, subject, emailContent);
 
-                    return AuthResult.FailureLogin($"L'Email ({email}) è registrata nel sistema vecchio");
+                    return AuthResult.FailureAuth($"L'Email ({email}) è registrata nel sistema vecchio");
                 }
             }
             else
@@ -79,15 +79,79 @@ namespace RideWild.Services
 
                     var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
-                    return AuthResult.SuccessLogin(jwt);
+                    return AuthResult.SuccessAuth(jwt);
                 }
                 else
                 {
-                    return AuthResult.FailureLogin("Password errata");
+                    return AuthResult.FailureAuth("Password errata");
                 }
             }
             
         }
+
+        public async Task<AuthResult> Register(CustomerDTO customer)
+        {
+            if (checkEmailExists(customer.EmailAddress))
+            {
+                return AuthResult.FailureAuth("Utente già presente con questa email");
+            }
+            else
+            {
+                var psw = SecurityLib.PasswordUtility.HashPassword(customer.Password);
+
+                Customer newCustomer = new Customer
+                {
+                    NameStyle = customer.NameStyle,
+                    Title = customer.Title,
+                    FirstName = customer.FirstName,
+                    MiddleName = customer.MiddleName,
+                    LastName = customer.LastName,
+                    Suffix = customer.Suffix,
+                    CompanyName = customer.CompanyName,
+                    SalesPerson = customer.SalesPerson,
+                    EmailAddress = "",
+                    PasswordHash = "",
+                    PasswordSalt = ""
+                };
+                try
+                {
+                    _context.Customers.Add(newCustomer);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException dbEx)
+                {
+                    //DA CONTROLLARE
+                    var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+
+                    return AuthResult.FailureAuth($"Errore durante il salvataggio nel DB: {innerMessage}");
+                }
+                catch (Exception ex)
+                {
+                    return AuthResult.FailureAuth($"Errore durante il salvataggio nel DB: {ex.Message}");
+                }
+
+
+                var customerData = new CustomerData
+                {
+                    Id = newCustomer.CustomerId,
+                    EmailAddress = customer.EmailAddress,
+                    PasswordHash = psw.Hash,
+                    PasswordSalt = psw.Salt,
+                    PhoneNumber = customer.Phone,
+                    AddressLine = ""
+                };
+                _contextData.CustomerData.Add(customerData);
+                await _contextData.SaveChangesAsync();
+
+                return AuthResult.SuccessAuth("Nuovo utente registrato");
+            }
+        }
+
+        private bool checkEmailExists(string email)
+        {
+            return _contextData.CustomerData.Any(e => e.EmailAddress == email) || _context.Customers.Any(e => e.EmailAddress == email);
+        }
+
     }
 
 }
