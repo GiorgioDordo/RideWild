@@ -70,7 +70,7 @@ namespace RideWild.Services
                     customer.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
                     await _contextData.SaveChangesAsync();
 
-                    return AuthResult.SuccessAuth(jwt);
+                    return AuthResult.SuccessAuth(jwt,refreshToken);
                 }
                 else
                 {
@@ -96,7 +96,7 @@ namespace RideWild.Services
 
             await _context.SaveChangesAsync();
 
-            return AuthResult.SuccessAuth(newAccessToken+"///"+newRefreshToken);
+            return AuthResult.SuccessAuth(newAccessToken, newRefreshToken);
         }
 
         private string GenerateJwtToken(String id)
@@ -181,7 +181,7 @@ namespace RideWild.Services
                 _contextData.CustomerData.Add(customerData);
                 await _contextData.SaveChangesAsync();
 
-                return AuthResult.SuccessAuth("Nuovo utente registrato");
+                return AuthResult.SuccessAuth("","");
             }
         }
 
@@ -189,8 +189,6 @@ namespace RideWild.Services
         {
             return _contextData.CustomerData.Any(e => e.EmailAddress == email) || _context.Customers.Any(e => e.EmailAddress == email);
         }
-
-
 
 
     }
