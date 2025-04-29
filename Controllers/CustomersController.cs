@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
-using RideWild.DataModels;
+using RideWild.Models.DataModels;
 using RideWild.DTO;
-using RideWild.Models;
+using RideWild.Models.AdventureModels;
 
 namespace RideWild.Controllers
 {
