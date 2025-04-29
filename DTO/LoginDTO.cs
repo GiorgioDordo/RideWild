@@ -1,8 +1,13 @@
-﻿namespace RideWild.DTO
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace RideWild.DTO
 {
     public class LoginDTO
     {
-        public string EmailAddress { get; set; } = null!;
-        public string Password { get; set; } = null!;
+        [Required]
+        public string Email { get; set; }
+
+        [Required]
+        public string Password { get; set; } 
     }
 }

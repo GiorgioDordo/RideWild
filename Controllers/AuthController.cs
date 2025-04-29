@@ -27,78 +27,28 @@ namespace RideWild.Controllers
         private readonly AdventureWorksLt2019Context _context;
         private readonly AdventureWorksDataContext _contextData;
         private readonly IEmailService _emailService;
+        private readonly IAuthService _authService;
 
-        public AuthController(AdventureWorksLt2019Context context, AdventureWorksDataContext contextData, IConfiguration configuration, IEmailService emailService)
+        public AuthController(IAuthService authService, AdventureWorksLt2019Context context, AdventureWorksDataContext contextData, IConfiguration configuration, IEmailService emailService)
         {
             _configuration = configuration;
             _context = context;
             _contextData = contextData;
             _emailService = emailService;
+            _authService = authService;
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<Customer>> LoginCustomer(LoginDTO loginDTO)
+        public async Task<ActionResult<Customer>> LoginCustomer(LoginDTO loginRequest)
         {
-            string email = loginDTO.EmailAddress;
-            string password = loginDTO.Password;
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            var customer = await _contextData.CustomerData
-                .Where(c => c.EmailAddress == email)
-                .FirstOrDefaultAsync();
+            var result = await _authService.LoginAsync(loginRequest);
+            if (!result.Success)
+                return Unauthorized(result.Message);
 
-            if (customer == null)
-            {
-                var oldCustumer = await _context.Customers
-                    .Where(c => c.EmailAddress == email)
-                    .FirstOrDefaultAsync();
-
-                if (oldCustumer == null)
-                {
-                    return NotFound("Account non esiste");
-                }
-                else
-                {
-                    var subject = "Aggiornaento sistema";
-                    var emailContent = "Ciao, per un aggiornamento di sistema per accedere al tuo profilo devi reimpostare la password." + "Clicca sul link  sottostante per reimpostare la password: <a href='#' ";
-                    await _emailService.PswResetEmailAsync(email, subject, emailContent);
-
-                    return Conflict(new
-                    {
-                        message = $"L'Email ({email}) è registrata nel sistema vecchio",
-                        errorCode = "USER_EXISTS"
-                    });
-                }
-            }
-            else
-            {
-                var isValid = SecurityLib.PasswordUtility.VerifyPassword(password, customer.PasswordHash, customer.PasswordSalt);
-                if (isValid)
-                {
-                    var secretKey = _configuration["JwtSettings:SecretKey"];
-                    var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey));
-                    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-                    var claims = new[]
-                    {
-                        new Claim(ClaimTypes.NameIdentifier, customer.Id.ToString())
-                    };
-
-                    var token = new JwtSecurityToken(
-                        claims: claims,
-                        expires: DateTime.UtcNow.AddHours(1),
-                        signingCredentials: creds
-                    );
-
-                    var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-                    return Ok(new { token = jwt });
-                }
-                else
-                {
-                    return Unauthorized("Password non valida!");
-                }
-            }
-
+            return Ok(result);
         }
 
         [HttpPost("register")]

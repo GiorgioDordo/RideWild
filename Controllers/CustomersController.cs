@@ -152,7 +152,7 @@ namespace RideWild.Controllers
         [HttpPost("Login")]
         public async Task<ActionResult<Customer>> LoginCustomer(LoginDTO loginDTO)
         {
-            string email = loginDTO.EmailAddress;
+            string email = loginDTO.Email;
             string password = loginDTO.Password;
 
             var customer = await _contextData.CustomerData

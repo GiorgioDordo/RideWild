@@ -62,6 +62,7 @@ namespace RideWild
                 options.UseSqlServer(builder.Configuration.GetConnectionString("AdventureWorksLT2019")));
 
             builder.Services.AddTransient<IEmailService, EmailService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
 
             var app = builder.Build();
             app.UseCors("CORSPolicy");
