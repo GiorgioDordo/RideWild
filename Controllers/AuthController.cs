@@ -16,6 +16,7 @@ using RideWild.Models.DataModels;
 using RideWild.DTO;
 using RideWild.Interfaces;
 using RideWild.Models.AdventureModels;
+using Microsoft.AspNetCore.Identity.Data;
 
 namespace RideWild.Controllers
 {
@@ -30,7 +31,10 @@ namespace RideWild.Controllers
             _authService = authService;
         }
 
-        [HttpPost("login")]
+        /*
+         * Customer Login
+         */
+        [HttpPost("Login")]
         public async Task<ActionResult<Customer>> LoginCustomer(LoginDTO loginRequest)
         {
             if (!ModelState.IsValid)
@@ -43,7 +47,10 @@ namespace RideWild.Controllers
             return Ok(result);
         }
 
-        [HttpPost("register")]
+        /*
+         * Customer Registration
+         */
+        [HttpPost("Register")]
         public async Task<ActionResult<CustomerDTO>> PostCustomer(CustomerDTO customer)
         {
             if (!ModelState.IsValid)
@@ -56,6 +63,16 @@ namespace RideWild.Controllers
             return Ok(result);
         }
 
-        
+        [HttpPost("Refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+        {
+            var result = await _authService.RefreshTokenAsync(request);
+            if (!result.Success)
+                return Unauthorized(result.Message);
+
+            return Ok(result);
+        }
+
+
     }
 }

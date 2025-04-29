@@ -62,22 +62,7 @@ namespace RideWild.Services
                 var isValid = SecurityLib.PasswordUtility.VerifyPassword(password, customer.PasswordHash, customer.PasswordSalt);
                 if (isValid)
                 {
-                    var secretKey = _configuration["JwtSettings:SecretKey"];
-                    var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey));
-                    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-                    var claims = new[]
-                    {
-                        new Claim(ClaimTypes.NameIdentifier, customer.Id.ToString())
-                    };
-
-                    var token = new JwtSecurityToken(
-                        claims: claims,
-                        expires: DateTime.UtcNow.AddHours(1),
-                        signingCredentials: creds
-                    );
-
-                    var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+                    string jwt = GenerateJwtToken(customer.Id.ToString());
 
                     return AuthResult.SuccessAuth(jwt);
                 }
@@ -87,6 +72,27 @@ namespace RideWild.Services
                 }
             }
             
+        }
+
+        private string GenerateJwtToken(String id)
+        {
+            var secretKey = _configuration["JwtSettings:SecretKey"];
+            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, id)
+            };
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: creds
+            );
+
+            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+            return jwt;
         }
 
         public async Task<AuthResult> Register(CustomerDTO customer)
@@ -130,7 +136,6 @@ namespace RideWild.Services
                     return AuthResult.FailureAuth($"Errore durante il salvataggio nel DB: {ex.Message}");
                 }
 
-
                 var customerData = new CustomerData
                 {
                     Id = newCustomer.CustomerId,
@@ -151,6 +156,9 @@ namespace RideWild.Services
         {
             return _contextData.CustomerData.Any(e => e.EmailAddress == email) || _context.Customers.Any(e => e.EmailAddress == email);
         }
+
+
+
 
     }
 
