@@ -2,7 +2,12 @@
 using Microsoft.EntityFrameworkCore;
 using RideWild.DataModels;
 using RideWild.Models;
+using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.MSSqlServer;
+using System.Data;
 using System.Text.Json.Serialization;
+using static Serilog.Sinks.MSSqlServer.ColumnOptions;
 
 namespace RideWild
 {
@@ -40,7 +45,22 @@ namespace RideWild
             builder.Services.AddDbContext<AdventureWorksLt2019Context>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("AdventureWorksLT2019")));
 
+            //serilog configuration
+            Serilog.Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
+                .WriteTo.Async(a => a.MSSqlServer(
+                    connectionString: builder.Configuration.GetConnectionString("AdventureWorksData"),
+                    tableName: "Logs",
+                    autoCreateSqlTable: false,
+                    batchPostingLimit: 1,
+                    period: TimeSpan.FromSeconds(5)
+                ))
+                .CreateLogger();
 
+            builder.Host.UseSerilog();
 
             var app = builder.Build();
             app.UseCors("CORSPolicy");

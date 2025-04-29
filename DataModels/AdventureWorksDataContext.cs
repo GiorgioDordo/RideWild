@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using RideWild.Models;
 
 namespace RideWild.DataModels;
 
@@ -19,7 +20,7 @@ public partial class AdventureWorksDataContext : DbContext
 
     public virtual DbSet<CustomerData> CustomerData { get; set; }
 
-    public virtual DbSet<LogError> LogErrors { get; set; }
+    public virtual DbSet<Log> Logs { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
 
@@ -52,17 +53,18 @@ public partial class AdventureWorksDataContext : DbContext
             entity.Property(e => e.PhoneNumber).HasMaxLength(255);
         });
 
-        modelBuilder.Entity<LogError>(entity =>
+        modelBuilder.Entity<Log>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("logerror_id_primary");
+            entity.HasKey(e => e.Id).HasName("log_id_primary");
 
-            entity.ToTable("LogError");
+            entity.ToTable("Logs");
 
-            entity.Property(e => e.ActionName).HasMaxLength(50);
-            entity.Property(e => e.ClassName).HasMaxLength(255);
-            entity.Property(e => e.Message).HasColumnType("text");
-            entity.Property(e => e.MethodName).HasMaxLength(50);
-            entity.Property(e => e.Time).HasColumnType("datetime");
+            entity.Property(e => e.Timestamp).HasColumnType("datetime2").IsRequired();
+            entity.Property(e => e.Level).HasMaxLength(128).IsRequired();
+            entity.Property(e => e.Message).HasColumnType("nvarchar(max)").IsRequired();
+            entity.Property(e => e.Exception).HasColumnType("nvarchar(max)").IsRequired(false);
+            entity.Property(e => e.Properties).HasColumnType("nvarchar(max)").IsRequired(false);
+            entity.Property(e => e.Application).HasMaxLength(256).IsRequired(false);
         });
 
         modelBuilder.Entity<Role>(entity =>
