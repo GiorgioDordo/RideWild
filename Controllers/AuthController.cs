@@ -6,16 +6,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RideWild.DataModels;
-
+//test
 namespace RideWild.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthUsersController : ControllerBase
+    public class AuthController : ControllerBase
     {
         private readonly AdventureWorksDataContext _context;
 
-        public AuthUsersController(AdventureWorksDataContext context)
+        public AuthController(AdventureWorksDataContext context)
         {
             _context = context;
         }
