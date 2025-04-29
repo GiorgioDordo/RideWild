@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace RideWild.Models;
+namespace RideWild.Models.AdventureModels;
 
 /// <summary>
 /// Product descriptions in several languages.

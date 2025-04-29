@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
-namespace RideWild.DataModels;
+namespace RideWild.Models.DataModels;
 
 public partial class AdventureWorksDataContext : DbContext
 {

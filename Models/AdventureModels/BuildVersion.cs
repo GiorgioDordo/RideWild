@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace RideWild.Models;
+namespace RideWild.Models.AdventureModels;
 
 /// <summary>
 /// Current version number of the AdventureWorksLT 2012 sample database. 

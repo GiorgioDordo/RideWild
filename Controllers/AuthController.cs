@@ -12,11 +12,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
-using RideWild.DataModels;
+using RideWild.Models.DataModels;
 using RideWild.DTO;
 using RideWild.Interfaces;
 using RideWild.Models.AdventureModels;
-using RideWild.Models.DataModels;
 
 namespace RideWild.Controllers
 {

@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using RideWild.DataModels;
+using RideWild.Models.DataModels;
 using RideWild.Interfaces;
-using RideWild.Models;
+using RideWild.Models.AdventureModels;
 using RideWild.Services;
 using System.Text;
 using System.Text.Json.Serialization;

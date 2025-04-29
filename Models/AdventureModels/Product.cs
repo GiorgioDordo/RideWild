@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace RideWild.Models;
+namespace RideWild.Models.AdventureModels;
 
 /// <summary>
 /// Products sold or used in the manfacturing of sold products.

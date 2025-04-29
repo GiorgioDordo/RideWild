@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace RideWild.Models;
+namespace RideWild.Models.AdventureModels;
 
 /// <summary>
 /// Cross-reference table mapping product descriptions and the language the description is written in.

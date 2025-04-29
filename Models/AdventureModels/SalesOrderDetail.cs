@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace RideWild.Models;
+namespace RideWild.Models.AdventureModels;
 
 /// <summary>
 /// Individual products associated with a specific sales order. See SalesOrderHeader.

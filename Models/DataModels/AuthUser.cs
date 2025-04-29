@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace RideWild.DataModels;
+namespace RideWild.Models.DataModels;
 
 public partial class AuthUser
 {
