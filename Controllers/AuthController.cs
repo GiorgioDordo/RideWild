@@ -63,10 +63,16 @@ namespace RideWild.Controllers
             return Ok(result);
         }
 
-        [HttpPost("Refresh")]
-        public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+        /*
+        * Customer refresh jwt token
+        */
+        [HttpPost("RefreshToken")]
+        public async Task<IActionResult> RefreshToken(String refreshToken)
         {
-            var result = await _authService.RefreshTokenAsync(request);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.RefreshTokenAsync(refreshToken);
             if (!result.Success)
                 return Unauthorized(result.Message);
 

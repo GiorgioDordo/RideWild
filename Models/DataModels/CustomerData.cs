@@ -16,4 +16,7 @@ public partial class CustomerData
     public string PhoneNumber { get; set; } = null!;
 
     public string AddressLine { get; set; } = null!;
+
+    public string RefreshToken { get; set; } = string.Empty;
+    public DateTime RefreshTokenExpiresAt { get; set; } = DateTime.UtcNow;
 }

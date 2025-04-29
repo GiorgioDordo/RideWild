@@ -9,6 +9,7 @@ using RideWild.Models.AdventureModels;
 using RideWild.Models.DataModels;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace RideWild.Services
@@ -63,6 +64,11 @@ namespace RideWild.Services
                 if (isValid)
                 {
                     string jwt = GenerateJwtToken(customer.Id.ToString());
+                    string refreshToken = GenerateRefreshToken();
+
+                    customer.RefreshToken = refreshToken;
+                    customer.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
+                    await _contextData.SaveChangesAsync();
 
                     return AuthResult.SuccessAuth(jwt);
                 }
@@ -72,6 +78,25 @@ namespace RideWild.Services
                 }
             }
             
+        }
+
+        public async Task<AuthResult> RefreshTokenAsync(string refreshToken)
+        {
+            var user = await _contextData.CustomerData
+                .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+
+            if (user == null || user.RefreshTokenExpiresAt < DateTime.UtcNow)
+                return AuthResult.FailureAuth("Token non valido o scaduto");
+
+            var newAccessToken = GenerateJwtToken(user.Id.ToString());
+            var newRefreshToken = GenerateRefreshToken();
+
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
+
+            await _context.SaveChangesAsync();
+
+            return AuthResult.SuccessAuth(newAccessToken+"///"+newRefreshToken);
         }
 
         private string GenerateJwtToken(String id)
@@ -87,12 +112,18 @@ namespace RideWild.Services
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(1),
+                expires: DateTime.UtcNow.AddMinutes(10),
                 signingCredentials: creds
             );
 
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
             return jwt;
+        }
+
+        private string GenerateRefreshToken()
+        {
+            var bytes = RandomNumberGenerator.GetBytes(64);
+            return Convert.ToBase64String(bytes);
         }
 
         public async Task<AuthResult> Register(CustomerDTO customer)
@@ -135,7 +166,7 @@ namespace RideWild.Services
                 {
                     return AuthResult.FailureAuth($"Errore durante il salvataggio nel DB: {ex.Message}");
                 }
-
+                string refreshToken = GenerateRefreshToken();
                 var customerData = new CustomerData
                 {
                     Id = newCustomer.CustomerId,
@@ -143,7 +174,9 @@ namespace RideWild.Services
                     PasswordHash = psw.Hash,
                     PasswordSalt = psw.Salt,
                     PhoneNumber = customer.Phone,
-                    AddressLine = ""
+                    AddressLine = "",
+                    RefreshToken = refreshToken,
+                    RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7),
                 };
                 _contextData.CustomerData.Add(customerData);
                 await _contextData.SaveChangesAsync();
