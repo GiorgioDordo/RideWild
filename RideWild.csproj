@@ -20,4 +20,10 @@
     <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="8.2.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="SecurityLib">
+      <HintPath>Library\SecurityLib.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
