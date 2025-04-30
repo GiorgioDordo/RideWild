@@ -64,6 +64,7 @@ namespace RideWild
             builder.Services.AddTransient<IEmailService, EmailService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
 
+            // Add services to the container.
             var app = builder.Build();
             app.UseCors("CORSPolicy");
             // Configure the HTTP request pipeline.
