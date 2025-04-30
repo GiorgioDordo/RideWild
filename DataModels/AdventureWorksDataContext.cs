@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using RideWild.Models;
 
 namespace RideWild.DataModels;
 
@@ -55,16 +54,16 @@ public partial class AdventureWorksDataContext : DbContext
 
         modelBuilder.Entity<Log>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("log_id_primary");
-
+            entity.HasKey(e => e.Id);
             entity.ToTable("Logs");
 
-            entity.Property(e => e.Timestamp).HasColumnType("datetime2").IsRequired();
-            entity.Property(e => e.Level).HasMaxLength(128).IsRequired();
-            entity.Property(e => e.Message).HasColumnType("nvarchar(max)").IsRequired();
-            entity.Property(e => e.Exception).HasColumnType("nvarchar(max)").IsRequired(false);
-            entity.Property(e => e.Properties).HasColumnType("nvarchar(max)").IsRequired(false);
-            entity.Property(e => e.Application).HasMaxLength(256).IsRequired(false);
+            entity.Property(e => e.Message).IsRequired().HasColumnType("nvarchar(max)");
+            entity.Property(e => e.MessageTemplate).IsRequired().HasColumnType("nvarchar(max)");
+            entity.Property(e => e.Level).HasMaxLength(128);
+            entity.Property(e => e.TimeStamp).HasColumnType("datetimeoffset").IsRequired();
+            entity.Property(e => e.Exception).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.Properties).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.LogEvent).HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<Role>(entity =>
