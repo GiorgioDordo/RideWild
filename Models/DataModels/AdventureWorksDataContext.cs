@@ -19,7 +19,7 @@ public partial class AdventureWorksDataContext : DbContext
 
     public virtual DbSet<CustomerData> CustomerData { get; set; }
 
-    public virtual DbSet<LogError> LogErrors { get; set; }
+    public virtual DbSet<Log> Logs { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
 
@@ -52,17 +52,18 @@ public partial class AdventureWorksDataContext : DbContext
             entity.Property(e => e.PhoneNumber).HasMaxLength(255);
         });
 
-        modelBuilder.Entity<LogError>(entity =>
+        modelBuilder.Entity<Log>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("logerror_id_primary");
+            entity.HasKey(e => e.Id);
+            entity.ToTable("Logs");
 
-            entity.ToTable("LogError");
-
-            entity.Property(e => e.ActionName).HasMaxLength(50);
-            entity.Property(e => e.ClassName).HasMaxLength(255);
-            entity.Property(e => e.Message).HasColumnType("text");
-            entity.Property(e => e.MethodName).HasMaxLength(50);
-            entity.Property(e => e.Time).HasColumnType("datetime");
+            entity.Property(e => e.Message).IsRequired().HasColumnType("nvarchar(max)");
+            entity.Property(e => e.MessageTemplate).IsRequired().HasColumnType("nvarchar(max)");
+            entity.Property(e => e.Level).HasMaxLength(128);
+            entity.Property(e => e.TimeStamp).HasColumnType("datetimeoffset").IsRequired();
+            entity.Property(e => e.Exception).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.Properties).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.LogEvent).HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<Role>(entity =>

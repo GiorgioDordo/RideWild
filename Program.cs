@@ -8,6 +8,7 @@ using RideWild.Models.AdventureModels;
 using RideWild.Services;
 using System.Text;
 using System.Text.Json.Serialization;
+using Serilog;
 
 namespace RideWild
 {
@@ -63,6 +64,14 @@ namespace RideWild
 
             builder.Services.AddTransient<IEmailService, EmailService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
+
+            //serilog configuration
+            Serilog.Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                .Enrich.FromLogContext()
+                .CreateLogger();
+
+            builder.Host.UseSerilog();
 
             // Add services to the container.
             var app = builder.Build();
