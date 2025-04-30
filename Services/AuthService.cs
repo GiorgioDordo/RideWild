@@ -80,10 +80,10 @@ namespace RideWild.Services
             
         }
 
-        public async Task<AuthResult> RefreshTokenAsync(string refreshToken)
+        public async Task<AuthResult> RefreshTokenAsync(RefreshTokenDTO refreshToken)
         {
             var user = await _contextData.CustomerData
-                .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+                .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken.RefreshToken);
 
             if (user == null || user.RefreshTokenExpiresAt < DateTime.UtcNow)
                 return AuthResult.FailureAuth("Token non valido o scaduto");
@@ -98,34 +98,19 @@ namespace RideWild.Services
 
             return AuthResult.SuccessAuth(newAccessToken, newRefreshToken);
         }
-
-        private string GenerateJwtToken(String id)
+        public async Task<AuthResult> RevokeRefreshTokenAsync(RefreshTokenDTO refreshToken)
         {
-            var secretKey = _configuration["JwtSettings:SecretKey"];
-            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var user = await _contextData.CustomerData
+                .FirstOrDefaultAsync(c => c.RefreshToken == refreshToken.RefreshToken);
 
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, id)
-            };
+            if (user == null) return AuthResult.FailureAuth("Token non valido o scaduto");
 
-            var token = new JwtSecurityToken(
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(10),
-                signingCredentials: creds
-            );
+            user.RefreshToken = "";
+            user.RefreshTokenExpiresAt = DateTime.UtcNow.AddMinutes(-5);
+            await _contextData.SaveChangesAsync();
 
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-            return jwt;
+            return AuthResult.SuccessAuth("", "");
         }
-
-        private string GenerateRefreshToken()
-        {
-            var bytes = RandomNumberGenerator.GetBytes(64);
-            return Convert.ToBase64String(bytes);
-        }
-
         public async Task<AuthResult> Register(CustomerDTO customer)
         {
             if (checkEmailExists(customer.EmailAddress))
@@ -181,8 +166,35 @@ namespace RideWild.Services
                 _contextData.CustomerData.Add(customerData);
                 await _contextData.SaveChangesAsync();
 
-                return AuthResult.SuccessAuth("","");
+                return AuthResult.SuccessAuth("", "");
             }
+        }
+
+        private string GenerateJwtToken(String id)
+        {
+            var secretKey = _configuration["JwtSettings:SecretKey"];
+            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, id)
+            };
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(15),
+                signingCredentials: creds
+            );
+
+            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+            return jwt;
+        }
+
+        private string GenerateRefreshToken()
+        {
+            var bytes = RandomNumberGenerator.GetBytes(64);
+            return Convert.ToBase64String(bytes);
         }
 
         private bool checkEmailExists(string email)

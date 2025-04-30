@@ -17,6 +17,7 @@ using RideWild.DTO;
 using RideWild.Interfaces;
 using RideWild.Models.AdventureModels;
 using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace RideWild.Controllers
 {
@@ -67,12 +68,29 @@ namespace RideWild.Controllers
         * Customer refresh jwt token
         */
         [HttpPost("RefreshToken")]
-        public async Task<IActionResult> RefreshToken([FromBody] String refreshToken)
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDTO refreshToken)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var result = await _authService.RefreshTokenAsync(refreshToken);
+            if (!result.Success)
+                return Unauthorized(result.Message);
+
+            return Ok(result);
+        }
+
+        /*
+         * Customer Logout
+         */
+        [Authorize]
+        [HttpPost("Logout")]
+        public async Task<IActionResult> Logout([FromBody] RefreshTokenDTO refreshToken)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.RevokeRefreshTokenAsync(refreshToken);
             if (!result.Success)
                 return Unauthorized(result.Message);
 

@@ -8,6 +8,7 @@ namespace RideWild.Interfaces
         Task<AuthResult> Login(LoginDTO request);
         Task<AuthResult> Register(CustomerDTO request);
 
-        Task<AuthResult> RefreshTokenAsync(string refreshToken);
+        Task<AuthResult> RefreshTokenAsync(RefreshTokenDTO refreshToken);
+        Task<AuthResult> RevokeRefreshTokenAsync(RefreshTokenDTO refreshToken);
     }
 }
