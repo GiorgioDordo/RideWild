@@ -97,6 +97,28 @@ namespace RideWild.Controllers
                 return BadRequest(result.Message);
             return Ok(result);
         }
+        /*
+         * Send email to reset password
+         */
+        [HttpPost("UpdatePswRequest")]
+        public async Task<IActionResult> ResetPasswordNewCustomer([FromBody] string email)
+        {
+            var result = await _authService.RequestResetPsw(email);
+            if (!result.Success)
+                return BadRequest(result.Message);
+            return Ok(result);
+        }
+        /*
+         * Customer Reset Password
+         */
+        [HttpPost("UpdatePsw")]
+        public async Task<IActionResult> UpdatePsw(ResetPasswordDTO updatePassword)
+        {
+            var result = await _authService.UpdatePassword(updatePassword);
+            if (!result.Success)
+                return BadRequest(result.Message);
+            return Ok(result);
+        }
 
     }
 }

@@ -73,9 +73,11 @@ namespace RideWild.Services
                 else
                 {
                     var jwt = GenerateJwtTokenResetPwd(email);
-                    var resetLink = $"https://tuodominio.it/reset-password?token={jwt}";
+                    var resetLink = $"https://localhost:7023/reset-password?token={jwt}";
                     var subject = "Aggiornamento sistema";
-                    var emailContent = "Ciao, per un aggiornamento di sistema per accedere al tuo profilo devi reimpostare la password." + $"Clicca sul link  sottostante per reimpostare la password: {jwt} ";
+                    var emailContent = $@"
+                        <p>Clicca sul link sottostante per reimpostare la password:</p>
+                        <p><a href=""{resetLink}"">{resetLink}</a></p>";
                     await _emailService.PswResetEmailAsync(email, subject, emailContent);
 
                     return AuthResult.FailureAuth($"L'Email ({email}) è registrata nel sistema vecchio");
@@ -138,6 +140,76 @@ namespace RideWild.Services
                 user.ModifiedDate = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();
+
+                return AuthResult.SuccessOperation();
+            }
+            catch
+            {
+                return AuthResult.FailureAuth("Token scaduto o non valido");
+            }
+        }
+
+        public async Task<AuthResult> RequestResetPsw(string email)
+        {
+            var customer = await _contextData.CustomerData
+                .Where(c => c.EmailAddress == email)
+                .FirstOrDefaultAsync();
+            if (customer == null)
+            {
+                return AuthResult.FailureAuth("Nessun account è associato a questa email");
+            }
+            else
+            {
+                var jwt = GenerateJwtTokenResetPwd(email);
+                var resetLink = $"https://localhost:7023/update-password?token={jwt}";
+                var subject = "Reimposta la tua password";
+                var emailContent = $@"
+                    <p>Clicca sul link sottostante per reimpostare la password:</p>
+                    <p><a href=""{resetLink}"">{resetLink}</a></p>";
+                await _emailService.PswResetEmailAsync(email, subject, emailContent);
+                return AuthResult.SuccessOperation();
+            }
+        }
+        public async Task<AuthResult> UpdatePassword(ResetPasswordDTO resetPassword)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_configuration["JwtSettings:SecretKey"]);
+
+            var parameters = new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+
+            try
+            {
+                var principal = handler.ValidateToken(resetPassword.Token, parameters, out _);
+
+                var tokenType = principal.Claims.FirstOrDefault(c => c.Type == "token_type")?.Value;
+                if (tokenType != "password_reset")
+                    return AuthResult.FailureAuth("Token non valido");
+
+                var userEmail = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+                var user = await _contextData.CustomerData
+                    .FirstOrDefaultAsync(c => c.EmailAddress == userEmail);
+
+                if (user == null)
+                    return AuthResult.FailureAuth("Utente non trovato");
+
+                var psw = SecurityLib.PasswordUtility.HashPassword(resetPassword.NewPassword);
+
+                string refreshToken = GenerateRefreshToken();
+
+                user.PasswordHash = psw.Hash;
+                user.PasswordSalt = psw.Salt;
+                user.RefreshToken = refreshToken;
+                user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
+
+                await _contextData.SaveChangesAsync();
 
                 return AuthResult.SuccessOperation();
             }

@@ -1,4 +1,5 @@
-﻿using RideWild.DTO;
+﻿using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using RideWild.DTO;
 using RideWild.Models;
 
 namespace RideWild.Interfaces
@@ -11,5 +12,7 @@ namespace RideWild.Interfaces
         Task<AuthResult> RefreshTokenAsync(RefreshTokenDTO refreshToken);
         Task<AuthResult> RevokeRefreshTokenAsync(RefreshTokenDTO refreshToken);
         Task<AuthResult> ResetPasswordOldCustomer(ResetPasswordDTO resetPassword);
+        Task<AuthResult> UpdatePassword(ResetPasswordDTO resetPassword);
+        Task<AuthResult> RequestResetPsw(string email);
     }
 }
