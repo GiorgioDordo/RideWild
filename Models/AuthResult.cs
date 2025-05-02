@@ -15,6 +15,11 @@
         {
             return new AuthResult { Success = false, Message = message };
         }
+
+        public static AuthResult SuccessOperation()
+        {
+            return new AuthResult { Success = true};
+        }
     }
 
 }

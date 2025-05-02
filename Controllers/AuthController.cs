@@ -36,10 +36,8 @@ namespace RideWild.Controllers
          * Customer Login
          */
         [HttpPost("Login")]
-        public async Task<ActionResult<Customer>> LoginCustomer(LoginDTO loginRequest)
+        public async Task<IActionResult> LoginCustomer(LoginDTO loginRequest)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
 
             var result = await _authService.Login(loginRequest);
             if (!result.Success)
@@ -52,11 +50,8 @@ namespace RideWild.Controllers
          * Customer Registration
          */
         [HttpPost("Register")]
-        public async Task<ActionResult<CustomerDTO>> PostCustomer(CustomerDTO customer)
+        public async Task<IActionResult> RegisterCustomer(CustomerDTO customer)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _authService.Register(customer);
             if (!result.Success)
                 return BadRequest(result.Message);
@@ -68,11 +63,8 @@ namespace RideWild.Controllers
         * Customer refresh jwt token
         */
         [HttpPost("RefreshToken")]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDTO refreshToken)
+        public async Task<IActionResult> RefreshToken(RefreshTokenDTO refreshToken)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _authService.RefreshTokenAsync(refreshToken);
             if (!result.Success)
                 return Unauthorized(result.Message);
@@ -85,11 +77,8 @@ namespace RideWild.Controllers
          */
         [Authorize]
         [HttpPost("Logout")]
-        public async Task<IActionResult> Logout([FromBody] RefreshTokenDTO refreshToken)
+        public async Task<IActionResult> Logout(RefreshTokenDTO refreshToken)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var result = await _authService.RevokeRefreshTokenAsync(refreshToken);
             if (!result.Success)
                 return Unauthorized(result.Message);
@@ -97,6 +86,17 @@ namespace RideWild.Controllers
             return Ok(result);
         }
 
+        /*
+         * Customer Reset Password
+         */
+        [HttpPost("ResetPswOldCustomer")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordDTO resetPassword)
+        {
+            var result = await _authService.ResetPasswordOldCustomer(resetPassword);
+            if (!result.Success)
+                return BadRequest(result.Message);
+            return Ok(result);
+        }
 
     }
 }

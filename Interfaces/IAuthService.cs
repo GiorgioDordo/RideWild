@@ -10,5 +10,6 @@ namespace RideWild.Interfaces
 
         Task<AuthResult> RefreshTokenAsync(RefreshTokenDTO refreshToken);
         Task<AuthResult> RevokeRefreshTokenAsync(RefreshTokenDTO refreshToken);
+        Task<AuthResult> ResetPasswordOldCustomer(ResetPasswordDTO resetPassword);
     }
 }

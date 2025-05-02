@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using NuGet.Common;
 using RideWild.DTO;
 using RideWild.Interfaces;
 using RideWild.Models;
@@ -39,26 +41,7 @@ namespace RideWild.Services
                 .Where(c => c.EmailAddress == email)
                 .FirstOrDefaultAsync();
 
-            if (customer == null)
-            {
-                var oldCustumer = await _context.Customers
-                    .Where(c => c.EmailAddress == email)
-                    .FirstOrDefaultAsync();
-
-                if (oldCustumer == null)
-                {
-                    return AuthResult.FailureAuth("Account inesistente");
-                }
-                else
-                {
-                    var subject = "Aggiornaento sistema";
-                    var emailContent = "Ciao, per un aggiornamento di sistema per accedere al tuo profilo devi reimpostare la password." + "Clicca sul link  sottostante per reimpostare la password: <a href='#' ";
-                    await _emailService.PswResetEmailAsync(email, subject, emailContent);
-
-                    return AuthResult.FailureAuth($"L'Email ({email}) è registrata nel sistema vecchio");
-                }
-            }
-            else
+            if (customer != null)
             {
                 var isValid = SecurityLib.PasswordUtility.VerifyPassword(password, customer.PasswordHash, customer.PasswordSalt);
                 if (isValid)
@@ -70,14 +53,98 @@ namespace RideWild.Services
                     customer.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
                     await _contextData.SaveChangesAsync();
 
-                    return AuthResult.SuccessAuth(jwt,refreshToken);
+                    return AuthResult.SuccessAuth(jwt, refreshToken);
                 }
                 else
                 {
                     return AuthResult.FailureAuth("Password errata");
                 }
             }
+            else
+            {
+                var oldCustumer = await _context.Customers
+                    .Where(c => c.EmailAddress == email)
+                    .FirstOrDefaultAsync();
+
+                if (oldCustumer == null)
+                {
+                    return AuthResult.FailureAuth("Account inesistente");
+                }
+                else
+                {
+                    var jwt = GenerateJwtTokenResetPwd(email);
+                    var resetLink = $"https://tuodominio.it/reset-password?token={jwt}";
+                    var subject = "Aggiornamento sistema";
+                    var emailContent = "Ciao, per un aggiornamento di sistema per accedere al tuo profilo devi reimpostare la password." + $"Clicca sul link  sottostante per reimpostare la password: {jwt} ";
+                    await _emailService.PswResetEmailAsync(email, subject, emailContent);
+
+                    return AuthResult.FailureAuth($"L'Email ({email}) è registrata nel sistema vecchio");
+                }
+            }
             
+        }
+
+        public async Task<AuthResult> ResetPasswordOldCustomer(ResetPasswordDTO resetPassword)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_configuration["JwtSettings:SecretKey"]);
+
+            var parameters = new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+
+            try
+            {
+                var principal = handler.ValidateToken(resetPassword.Token, parameters, out _);
+
+                var tokenType = principal.Claims.FirstOrDefault(c => c.Type == "token_type")?.Value;
+                if (tokenType != "password_reset")
+                    return AuthResult.FailureAuth("Token non valido");
+
+                var userEmail = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+                var user = await _context.Customers
+                    .FirstOrDefaultAsync(c => c.EmailAddress == userEmail);
+
+                if (user == null) 
+                    return AuthResult.FailureAuth("Utente non trovato");
+
+                var psw = SecurityLib.PasswordUtility.HashPassword(resetPassword.NewPassword);
+
+                string refreshToken = GenerateRefreshToken();
+                var customerData = new CustomerData
+                {
+                    Id = user.CustomerId,
+                    EmailAddress = user.EmailAddress,
+                    PasswordHash = psw.Hash,
+                    PasswordSalt = psw.Salt,
+                    PhoneNumber = user.Phone,
+                    AddressLine = "",
+                    RefreshToken = refreshToken,
+                    RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7),
+                };
+                _contextData.CustomerData.Add(customerData);
+                await _contextData.SaveChangesAsync();
+
+                user.PasswordHash = "";
+                user.PasswordSalt = "";
+                user.EmailAddress = "";
+                user.Phone = "";
+                user.ModifiedDate = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return AuthResult.SuccessOperation();
+            }
+            catch
+            {
+                return AuthResult.FailureAuth("Token scaduto o non valido");
+            }
         }
 
         public async Task<AuthResult> RefreshTokenAsync(RefreshTokenDTO refreshToken)
@@ -109,7 +176,7 @@ namespace RideWild.Services
             user.RefreshTokenExpiresAt = DateTime.UtcNow.AddMinutes(-5);
             await _contextData.SaveChangesAsync();
 
-            return AuthResult.SuccessAuth("", "");
+            return AuthResult.SuccessOperation();
         }
         public async Task<AuthResult> Register(CustomerDTO customer)
         {
@@ -166,7 +233,7 @@ namespace RideWild.Services
                 _contextData.CustomerData.Add(customerData);
                 await _contextData.SaveChangesAsync();
 
-                return AuthResult.SuccessAuth("", "");
+                return AuthResult.SuccessOperation();
             }
         }
 
@@ -179,6 +246,27 @@ namespace RideWild.Services
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, id)
+            };
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(15),
+                signingCredentials: creds
+            );
+
+            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+            return jwt;
+        }
+        private string GenerateJwtTokenResetPwd(String email)
+        {
+            var secretKey = _configuration["JwtSettings:SecretKey"];
+            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim("token_type", "password_reset"),
+                new Claim(ClaimTypes.Email, email)
             };
 
             var token = new JwtSecurityToken(
