@@ -9,6 +9,7 @@ using RideWild.Services;
 using System.Text;
 using System.Text.Json.Serialization;
 using Serilog;
+using Microsoft.AspNetCore.Diagnostics;
 
 namespace RideWild
 {
@@ -75,7 +76,27 @@ namespace RideWild
 
             // Add services to the container.
             var app = builder.Build();
+
             app.UseCors("CORSPolicy");
+
+            // middleware exception handler
+            app.UseExceptionHandler(errApp =>
+            {
+                errApp.Run(async ctx =>
+                {
+                    var feat = ctx.Features.Get<IExceptionHandlerFeature>();
+
+                    if (feat != null)
+                    {
+                        Serilog.Log.Error(feat.Error, "Unhandled exception on {Path}", ctx.Request.Path);
+                    }
+
+                    ctx.Response.StatusCode = 500;
+
+                    await ctx.Response.WriteAsync("Internal server error.");
+                });
+            });
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
