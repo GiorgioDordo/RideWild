@@ -52,32 +52,64 @@ namespace RideWild.Controllers
 
         // PUT: api/Products/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        //[HttpPut("{id}")]
-        //public async Task<IActionResult> PutProduct(int id, ProductDTO productDTO)
-        //{
-        //    Product product = new Product
-        //    {
-        //        Name = productDTO.Name,
-        //        ProductNumber = productDTO.ProductNumber,
-        //        Color = productDTO.Color,
-        //        StandardCost = productDTO.StandardCost,
-        //        ListPrice = productDTO.ListPrice,
-        //        Size = productDTO.Size,
-        //        Weight = productDTO.Weight,
-        //        ProductCategoryId = productDTO.ProductCategoryId,
-        //        ProductModelId = productDTO.ProductModelId,
-        //        SellStartDate = productDTO.SellStartDate,
-        //        SellEndDate = productDTO.SellEndDate
-        //    };
-        //    if (id != product.ProductId)
-        //    {
-        //        return BadRequest();
-        //    }
-        //    _context.Products.Update(product);
-        //    await _context.SaveChangesAsync();
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutProduct(int id, ProductDTO productDTO)
+        {
+            var product = await _context.Products.FindAsync(id);
 
-        //    return CreatedAtAction(nameof(PutProduct), new { }, productDTO);
-        //}
+              if (product == null)
+            {
+                return NotFound();
+            }
+
+            product.Name = productDTO.Name;
+            product.ProductNumber = productDTO.ProductNumber;
+            product.Color = productDTO.Color;
+            product.StandardCost = productDTO.StandardCost;
+            product.ListPrice = productDTO.ListPrice;
+            product.Size = productDTO.Size;
+            product.Weight = productDTO.Weight;
+            product.ProductCategoryId = productDTO.ProductCategoryId;
+            product.ProductModelId = productDTO.ProductModelId;
+            product.SellStartDate = productDTO.SellStartDate == default ? DateTime.UtcNow : productDTO.SellStartDate;
+            product.SellEndDate = null; // Set to null if not provided
+            product.ThumbNailPhoto = productDTO.ThumbNailPhoto;
+            product.ThumbnailPhotoFileName = productDTO.ThumbnailPhotoFileName;
+
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException) when (!ProductExists(id))
+            {
+                return NotFound();
+            }
+
+            return NoContent();
+
+            //Product product = new Product
+            //{
+            //    Name = productDTO.Name,
+            //    ProductNumber = productDTO.ProductNumber,
+            //    Color = productDTO.Color,
+            //    StandardCost = productDTO.StandardCost,
+            //    ListPrice = productDTO.ListPrice,
+            //    Size = productDTO.Size,
+            //    Weight = productDTO.Weight,
+            //    ProductCategoryId = productDTO.ProductCategoryId,
+            //    ProductModelId = productDTO.ProductModelId,
+            //    SellStartDate = productDTO.SellStartDate == default ? DateTime.UtcNow : productDTO.SellStartDate,
+            //    SellEndDate = null, // Set to null if not provided,
+            //    ThumbNailPhoto = productDTO.ThumbNailPhoto,
+            //    ThumbnailPhotoFileName = productDTO.ThumbnailPhotoFileName,
+            //};
+
+            //_context.Products.Update(product);
+            //await _context.SaveChangesAsync();
+
+            //return CreatedAtAction(nameof(GetProduct), new { id = product.ProductId }, product); ;
+        }
 
         // POST: api/Products
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
