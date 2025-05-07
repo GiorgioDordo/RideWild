@@ -50,7 +50,7 @@ namespace RideWild.Controllers
          * Customer Registration
          */
         [HttpPost("Register")]
-        public async Task<IActionResult> RegisterCustomer(CustomerDTO customer)
+        public async Task<IActionResult> RegisterCustomer(RegisterDTO customer)
         {
             var result = await _authService.Register(customer);
             if (!result.Success)

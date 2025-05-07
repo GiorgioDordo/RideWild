@@ -250,7 +250,7 @@ namespace RideWild.Services
 
             return AuthResult.SuccessOperation();
         }
-        public async Task<AuthResult> Register(CustomerDTO customer)
+        public async Task<AuthResult> Register(RegisterDTO customer)
         {
             if (checkEmailExists(customer.EmailAddress))
             {
@@ -262,17 +262,12 @@ namespace RideWild.Services
 
                 Customer newCustomer = new Customer
                 {
-                    NameStyle = customer.NameStyle,
-                    Title = customer.Title,
                     FirstName = customer.FirstName,
-                    MiddleName = customer.MiddleName,
                     LastName = customer.LastName,
-                    Suffix = customer.Suffix,
-                    CompanyName = customer.CompanyName,
-                    SalesPerson = customer.SalesPerson,
                     EmailAddress = "",
                     PasswordHash = "",
-                    PasswordSalt = ""
+                    PasswordSalt = "",
+                    Phone = "",
                 };
                 try
                 {
