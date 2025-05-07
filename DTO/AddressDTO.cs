@@ -9,7 +9,6 @@
         public string StateProvince { get; set; } = null!;
         public string CountryRegion { get; set; } = null!;
         public string PostalCode { get; set; } = null!;
-        public int CustomerId { get; set; }
         public string AddressType { get; set; } = null!;
 
     }
