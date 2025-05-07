@@ -61,14 +61,14 @@ namespace RideWild.Controllers
             _context.CustomerAddresses.Add(customerAddress);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetAddressById", new { id = address.AddressId }, address);
-
+            return CreatedAtAction(nameof(GetPersonalInfo), new { }, addressDTO);
         }
 
         /*
          * GET: /Customers/GetAddress
          * Get the address of the customer that use the API
          */
+        [Authorize]
         [HttpGet("GetAddress")]
         public async Task<ActionResult<List<AddressDTO>>> GetAddress()
         {
@@ -80,6 +80,7 @@ namespace RideWild.Controllers
                 .Include(ca => ca.Address)
                 .Select(ca => new AddressDTO
                 {
+                    AddressId = ca.AddressId,
                     AddressLine1 = ca.Address.AddressLine1,
                     AddressLine2 = ca.Address.AddressLine2,
                     City = ca.Address.City,
@@ -94,12 +95,43 @@ namespace RideWild.Controllers
         }
 
         /*
+         * DELETE: /Customers/DeleteAddress/id
+         * Delete the address with addressId=id of the customer that use the API
+         */
+        [Authorize]
+        [HttpDelete("DeleteAddress/{id}")]
+        public async Task<IActionResult> DeleteCustomerAddress(int id)
+        {
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
+
+            var customerAddress = await _context.CustomerAddresses
+                .Include(ca => ca.Address)
+                .FirstOrDefaultAsync(ca => ca.CustomerId == userId && ca.AddressId == id);
+
+            if (customerAddress == null)
+                return NotFound("Indirizzo non trovato o non autorizzato");
+
+            _context.CustomerAddresses.Remove(customerAddress);
+
+            var isAddressShared = await _context.CustomerAddresses.AnyAsync(ca => ca.AddressId == id);
+            if (!isAddressShared)
+            {
+                _context.Addresses.Remove(customerAddress.Address);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        /*
          * GET: /Customers/GetPersonalInfo
          * Get the personal information of the customer that use the API
          */
         [Authorize]
         [HttpGet("GetPersonalInfo")]
-        public async Task<ActionResult<CustomerDTO>> getPersonalInfo()
+        public async Task<ActionResult<CustomerDTO>> GetPersonalInfo()
         {
             if (!Helper.TryGetUserId(User, out int userId))
                 return Unauthorized("Utente non autenticato o ID non valido");
@@ -127,62 +159,44 @@ namespace RideWild.Controllers
                 Suffix = customer.Suffix,
                 CompanyName = customer.CompanyName,
                 SalesPerson = customer.SalesPerson,
-                EmailAddress = customerData.EmailAddress,
-                Phone = customerData.PhoneNumber,
             };
 
             return Ok(customerDTO);
         }
 
-        //DA FARE
-        // PUT: api/Customers/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCustomer(int id, Customer customer)
+        /*
+         * PUT: /Customers/ModifyData
+         * Change the personal information of the customer that use the API
+         */
+        [Authorize]
+        [HttpPut("ModifyData")]
+        public async Task<IActionResult> ModifyData(CustomerDTO customerDto)
         {
-            if (id != customer.CustomerId)
-            {
-                return BadRequest();
-            }
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
 
-            _context.Entry(customer).State = EntityState.Modified;
+            var customer = await _context.Customers.FindAsync(userId);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CustomerExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        //DA FARE
-        // DELETE: api/Customers/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCustomer(int id)
-        {
-            var customer = await _context.Customers.FindAsync(id);
             if (customer == null)
-            {
-                return NotFound();
-            }
+                return NotFound("Cliente non trovato");
 
-            _context.Customers.Remove(customer);
+            customer.FirstName = customerDto.FirstName;
+            customer.LastName = customerDto.LastName;
+            customer.MiddleName = customerDto.MiddleName;
+            customer.Title = customerDto.Title;
+            customer.Suffix = customerDto.Suffix;
+            customer.CompanyName = customerDto.CompanyName;
+            customer.SalesPerson = customerDto.SalesPerson;
+            customer.NameStyle = customerDto.NameStyle;
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
+        /*
+         * Check if the customer exists
+         */
         private bool CustomerExists(int id)
         {
             return _context.Customers.Any(e => e.CustomerId == id);
