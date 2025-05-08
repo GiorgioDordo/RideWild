@@ -23,9 +23,9 @@ namespace RideWild
 
             var builder = WebApplication.CreateBuilder(args);
 
-            JwtSettings jwtSettingss = new();
-            jwtSettingss = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
-            builder.Services.AddSingleton(jwtSettingss);
+            JwtSettings jwtSettings = new();
+            jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+            builder.Services.AddSingleton(jwtSettings);
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -36,9 +36,9 @@ namespace RideWild
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-                        ValidIssuer = jwtSettingss.Issuer,
-                        ValidAudience = jwtSettingss.Audience,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettingss.SecretKey)),
+                        ValidIssuer = jwtSettings.Issuer,
+                        ValidAudience = jwtSettings.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
                         ClockSkew = TimeSpan.FromMinutes(1)
 
                     };
