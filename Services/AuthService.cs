@@ -23,13 +23,15 @@ namespace RideWild.Services
         private readonly AdventureWorksLt2019Context _context;
         private readonly AdventureWorksDataContext _contextData;
         private readonly IEmailService _emailService;
+        private JwtSettings _jwtSettings;
 
-        public AuthService(AdventureWorksLt2019Context context, AdventureWorksDataContext contextData, IConfiguration configuration, IEmailService emailService)
+        public AuthService(JwtSettings jwtsettings, AdventureWorksLt2019Context context, AdventureWorksDataContext contextData, IConfiguration configuration, IEmailService emailService)
         {
             _configuration = configuration;
             _context = context;
             _contextData = contextData;
             _emailService = emailService;
+            _jwtSettings = jwtsettings;
         }
 
         public async Task<AuthResult> Login(LoginDTO request)
@@ -306,22 +308,24 @@ namespace RideWild.Services
 
         private string GenerateJwtToken(String id)
         {
-            var secretKey = _configuration["JwtSettings:SecretKey"];
-            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
+            var secretKey = _jwtSettings.SecretKey;
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(secretKey);
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-                new Claim(ClaimTypes.NameIdentifier, id)
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, id)
+                }),
+                Expires = DateTime.Now.AddMinutes(_jwtSettings.ExpirationMinutes),
+                Issuer = _jwtSettings.Issuer,
+                Audience = _jwtSettings.Audience,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
-            var token = new JwtSecurityToken(
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(15),
-                signingCredentials: creds
-            );
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var jwt = tokenHandler.WriteToken(token);
 
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
             return jwt;
         }
         private string GenerateJwtTokenResetPwd(String email)
