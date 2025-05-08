@@ -9,6 +9,7 @@ using RideWild.Services;
 using System.Text;
 using System.Text.Json.Serialization;
 using Serilog;
+using RideWild.Models;
 using Microsoft.AspNetCore.Diagnostics;
 
 namespace RideWild
@@ -18,28 +19,33 @@ namespace RideWild
     {
         public static void Main(string[] args)
         {
+            
 
             var builder = WebApplication.CreateBuilder(args);
-            var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-            var secretKey = jwtSettings.GetValue<string>("SecretKey");
-            // Add services to the container.
-            builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
+
+            JwtSettings jwtSettingss = new();
+            jwtSettingss = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+            builder.Services.AddSingleton(jwtSettingss);
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
                 {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
-                    ValidateIssuer = false,
-                    ValidateAudience = false
-                };
-            });
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = jwtSettingss.Issuer,
+                        ValidAudience = jwtSettingss.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettingss.SecretKey)),
+                        ClockSkew = TimeSpan.FromMinutes(1)
+
+                    };
+                });
+
             builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
             builder.Services.AddOpenApi();
 
             builder.Services.AddControllers().AddJsonOptions(jsOpt =>
