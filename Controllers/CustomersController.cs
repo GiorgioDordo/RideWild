@@ -30,12 +30,12 @@ namespace RideWild.Controllers
         }
 
         /*
-         * POST: /Customers/NewAddress
-         * Insert a new address for a customer
+         * POST: /Customers/AddAddress
+         * Insert a new address for a customer that use the API
          */
         [Authorize]
-        [HttpPost("NewAddress")]
-        public async Task<ActionResult<Address>> AddressCustomer(AddressDTO addressDTO)
+        [HttpPost("AddAddress")]
+        public async Task<ActionResult<Address>> AddAddress(AddressDTO addressDTO)
         {
             if (!Helper.TryGetUserId(User, out int userId))
                 return Unauthorized("Utente non autenticato o ID non valido");
@@ -66,7 +66,7 @@ namespace RideWild.Controllers
 
         /*
          * GET: /Customers/GetAddress
-         * Get the address of the customer that use the API
+         * Get the addresses of the customer that use the API
          */
         [Authorize]
         [HttpGet("GetAddress")]
@@ -113,12 +113,7 @@ namespace RideWild.Controllers
                 return NotFound("Indirizzo non trovato o non autorizzato");
 
             _context.CustomerAddresses.Remove(customerAddress);
-
-            var isAddressShared = await _context.CustomerAddresses.AnyAsync(ca => ca.AddressId == id);
-            if (!isAddressShared)
-            {
-                _context.Addresses.Remove(customerAddress.Address);
-            }
+            _context.Addresses.Remove(customerAddress.Address);
 
             await _context.SaveChangesAsync();
 
