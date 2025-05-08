@@ -235,7 +235,7 @@ namespace RideWild.Services
             user.RefreshToken = newRefreshToken;
             user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
 
-            await _context.SaveChangesAsync();
+            await _contextData.SaveChangesAsync();
 
             return AuthResult.SuccessAuth(newAccessToken, newRefreshToken);
         }
