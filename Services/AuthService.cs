@@ -24,6 +24,8 @@ namespace RideWild.Services
         private readonly AdventureWorksDataContext _contextData;
         private readonly IEmailService _emailService;
         private JwtSettings _jwtSettings;
+        private readonly string AngularUrl;
+        private readonly string AngularPort;
 
         public AuthService(JwtSettings jwtsettings, AdventureWorksLt2019Context context, AdventureWorksDataContext contextData, IConfiguration configuration, IEmailService emailService)
         {
@@ -32,6 +34,8 @@ namespace RideWild.Services
             _contextData = contextData;
             _emailService = emailService;
             _jwtSettings = jwtsettings;
+            AngularUrl = _configuration["AngularSettings:Url"];
+            AngularPort = _configuration["AngularSettings:Port"];
         }
 
         public async Task<AuthResult> Login(LoginDTO request)
@@ -75,7 +79,7 @@ namespace RideWild.Services
                 else
                 {
                     var jwt = GenerateJwtTokenResetPwd(email);
-                    var resetLink = $"https://localhost:7023/reset-password?token={jwt}";
+                    var resetLink = $"{AngularUrl}{AngularPort}/reset-password?token={jwt}";
                     var subject = "Aggiornamento sistema";
                     var emailContent = $@"
                         <p>Clicca sul link sottostante per reimpostare la password:</p>
@@ -163,7 +167,7 @@ namespace RideWild.Services
             else
             {
                 var jwt = GenerateJwtTokenResetPwd(email);
-                var resetLink = $"https://localhost:7023/update-password?token={jwt}";
+                var resetLink = $"{AngularUrl}{AngularPort}/update-password?token={jwt}";
                 var subject = "Reimposta la tua password";
                 var emailContent = $@"
                     <p>Clicca sul link sottostante per reimpostare la password:</p>
