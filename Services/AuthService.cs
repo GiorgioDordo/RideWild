@@ -163,7 +163,7 @@ namespace RideWild.Services
             else
             {
                 var jwt = GenerateJwtTokenResetPwd(email);
-                var resetLink = $"https://localhost:7023/update-password?token={jwt}";
+                var resetLink = $"http://localhost:4200/update-password?token={jwt}";
                 var subject = "Reimposta la tua password";
                 var emailContent = $@"
                     <p>Clicca sul link sottostante per reimpostare la password:</p>
