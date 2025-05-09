@@ -48,6 +48,7 @@ public partial class AdventureWorksLt2019Context : DbContext
     public virtual DbSet<VProductAndDescription> VProductAndDescriptions { get; set; }
 
     public virtual DbSet<VProductModelCatalogDescription> VProductModelCatalogDescriptions { get; set; }
+    public IEnumerable<object> ProductCategory { get; internal set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
