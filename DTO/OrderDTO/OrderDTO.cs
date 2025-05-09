@@ -8,7 +8,7 @@
         public int ShipToAddressId { get; set; } // addressId da associare al customer
         public string ShipMethod { get; set; } = null!;
         public string? Comment { get; set; }
-        public List<OrderDetailDTO> OrderDetails { get; set; } = new();
+        public List<OrderDetailDTO> OrderDetails { get; set; } = new(); // lista dei prodotti
 
     }
 }
