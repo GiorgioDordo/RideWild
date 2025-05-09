@@ -1,4 +1,5 @@
 ﻿using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,7 @@ using RideWild.DTO.OrderDTO;
 using RideWild.DTO.OrderDTO.OrderDTO;
 using RideWild.Models.AdventureModels;
 using RideWild.Models.DataModels;
+using RideWild.Utility;
 
 namespace RideWild.Controllers
 {
@@ -24,9 +26,13 @@ namespace RideWild.Controllers
 
         // mostra lista ordini
         // USE: ADMIN DASHBOARD
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllOrders(int page = 1, int pageSize = 20)
         {
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
+
             var orders = await _context.SalesOrderHeaders
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -37,9 +43,13 @@ namespace RideWild.Controllers
 
         // mostra gli ordini per customerId
         // USE: USER DASHBOARD O ADMIN DASHBOARD FILTER
+        [Authorize]
         [HttpGet("customer/{customerId}")]
         public async Task<IActionResult> GetOrdersByCustomer(int customerId, int page = 1, int pageSize = 20)
         {
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
+
             var orders = await _context.SalesOrderHeaders
                 .Where(o => o.CustomerId == customerId)
                 .Skip((page - 1) * pageSize)
@@ -51,9 +61,13 @@ namespace RideWild.Controllers
 
         // mostra l'ordine nel dettaglio
         // USE: ADMIN DASHBOARD
+        [Authorize]
         [HttpGet("{orderId}")]
         public async Task<ActionResult<SalesOrderHeader>> GetOrder(int orderId)
         {
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
+
             var order = await _context.SalesOrderHeaders
                 .Include(o => o.SalesOrderDetails)
                 .FirstOrDefaultAsync(o => o.SalesOrderId == orderId);
@@ -68,9 +82,13 @@ namespace RideWild.Controllers
 
         // crea ordine
         // USE: USER E ADMIN DASHBOARD
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<SalesOrderHeader>> CreateOrder(OrderDTO orderDto)
         {
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
+
             // creo il sales order header dal dto
             var newOrder = new SalesOrderHeader
             {
@@ -120,9 +138,13 @@ namespace RideWild.Controllers
 
         // modifica ordine
         // USE: ADMIN DASHBOARD
+        [Authorize]
         [HttpPut("{orderId}")]
         public async Task<IActionResult> UpdateOrder(int orderId, OrderDTO updateOrderDto)
         {
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
+
             // cerca l'ordine tramite id
             var orderToUpdate = await _context.SalesOrderHeaders
                 .Include(o => o.SalesOrderDetails)
@@ -183,9 +205,12 @@ namespace RideWild.Controllers
 
 
         // chiamata patch per spedizione partita
+        [Authorize]
         [HttpPatch("status")]
         public async Task<ActionResult<SalesOrderHeader>> PatchOrderStatus([FromBody] UpdateOrderStatusDTO updateOrderStatusDTO)
         {
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
 
             var order = await _context.SalesOrderHeaders.FindAsync(updateOrderStatusDTO.OrderId);
 
@@ -228,9 +253,13 @@ namespace RideWild.Controllers
 
         // cancella ordine 
         // USE: ADMIN DASHBOARD
+        [Authorize]
         [HttpDelete("{orderId}")]
         public async Task<IActionResult> DeleteOrder(int orderId)
         {
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
+
             var order = await _context.SalesOrderHeaders
                 .Include(o => o.SalesOrderDetails)
                 .FirstOrDefaultAsync(o => o.SalesOrderId == orderId);
