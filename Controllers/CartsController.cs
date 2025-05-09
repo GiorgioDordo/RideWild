@@ -32,6 +32,7 @@ namespace RideWild.Controllers
          * converto l'oggetto in DTO
          * calcolo il prezzo totale
          */
+
         [HttpGet("{customerId}")]
         public async Task<ActionResult<Cart>> GetCart(int customerId)
         {
