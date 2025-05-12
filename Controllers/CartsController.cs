@@ -1,8 +1,10 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RideWild.DTO;
 using RideWild.Models.AdventureModels;
+using RideWild.Utility;
 
 namespace RideWild.Controllers
 {
@@ -18,28 +20,23 @@ namespace RideWild.Controllers
         }
 
 
-        // GET: api/Carts
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Cart>>> GetCarts()
-        {
-            return await _context.Carts.ToListAsync();
-        }
-
-
-        // GET: api/Carts/5
+        // GET: api/Carts/get
         /*
          * recupero il carrello
          * converto l'oggetto in DTO
          * calcolo il prezzo totale
          */
-
-        [HttpGet("{customerId}")]
-        public async Task<ActionResult<Cart>> GetCart(int customerId)
+        [Authorize]
+        [HttpGet("get")]
+        public async Task<ActionResult<Cart>> GetCart()
         {
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
+
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
                 .ThenInclude(ci => ci.Product)
-                .FirstOrDefaultAsync(c => c.CustomerId == customerId);
+                .FirstOrDefaultAsync(c => c.CustomerId == userId);
 
             if (cart == null)
             {
@@ -71,13 +68,17 @@ namespace RideWild.Controllers
 
 
         // PUT: api/Carts/5
+        [Authorize]
         [HttpPut("update")]
         public async Task<IActionResult> UpdateCartItem(UpdateCartItemDTO updateCartItemDTO)
         {
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
+
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
                 .ThenInclude(ci => ci.Product)
-                .FirstOrDefaultAsync(c => c.CustomerId == updateCartItemDTO.CustomerId);
+                .FirstOrDefaultAsync(c => c.CustomerId == userId);
 
             if (cart == null)
                 return NotFound("Carrello non trovato");
@@ -110,12 +111,16 @@ namespace RideWild.Controllers
         * aggiungo un prodotto al carrello
         * calcolo il totale della riga
         */
+        [Authorize]
         [HttpPost("add")]
         public async Task<ActionResult<Cart>> AddCartItem(AddCartItemDTO addCartItemDTO)
         {
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
+
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
-                .FirstOrDefaultAsync(c => c.CustomerId == addCartItemDTO.CustomerId);
+                .FirstOrDefaultAsync(c => c.CustomerId == userId);
 
             if (cart == null)
             {
@@ -159,12 +164,17 @@ namespace RideWild.Controllers
 
         // DELETE: api/Carts/clear/5
         // elimino tutti i prodotti del carrello
-        [HttpDelete("clear/{customerId}")]
+        [Authorize]
+        [HttpDelete("clear")]
         public async Task<IActionResult> ClearCart(int customerId)
         {
+
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
+
             var cart = await _context.Carts
                 .Include(c => c.CartItems)
-                .FirstOrDefaultAsync(c => c.CustomerId == customerId);
+                .FirstOrDefaultAsync(c => c.CustomerId == userId);
 
             if (cart == null)
                 return NotFound("Carrello non trovato");
@@ -178,17 +188,29 @@ namespace RideWild.Controllers
 
         // DELETE: api/Carts/5
         // elimino un prodotto dal carrello
+        [Authorize]
         [HttpDelete("remove/{CartItemId}")]
         public async Task<IActionResult> RemoveCartItem(long CartItemId)
         {
-            var item = await _context.CartItems.FindAsync(CartItemId);
-            if (item == null)
-                return NotFound("Prodotto non trovato");
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
 
-            _context.CartItems.Remove(item);
+            var cart = await _context.Carts
+                .Include(c => c.CartItems)
+                .FirstOrDefaultAsync(c => c.CustomerId == userId);
+
+            if (cart == null)
+                return NotFound("Carrello non trovato per questo utente");
+
+            var itemToRemove = cart.CartItems.FirstOrDefault(ci => ci.Id == CartItemId);
+
+            if (itemToRemove == null)
+                return NotFound("Prodotto non trovato nel carrello");
+
+            _context.CartItems.Remove(itemToRemove);
             await _context.SaveChangesAsync();
 
-            return Ok("Prodotto rimosso");
+            return Ok("Prodotto rimosso dal carrello");
         }
     }
 }
