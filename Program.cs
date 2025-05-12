@@ -73,7 +73,7 @@ namespace RideWild
             builder.Services.AddScoped<IAuthService, AuthService>();
 
             //serilog configuration
-            Serilog.Log.Logger = new LoggerConfiguration()
+            Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(builder.Configuration)
                 .Enrich.FromLogContext()
                 .CreateLogger();

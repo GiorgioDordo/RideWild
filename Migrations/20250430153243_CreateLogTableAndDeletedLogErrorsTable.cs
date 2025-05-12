@@ -11,52 +11,60 @@ namespace RideWild.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "LogError");
+            // Usa un blocco SQL per eliminare LogError solo se esiste
+            migrationBuilder.Sql(@"
+                IF OBJECT_ID(N'LogError', N'U') IS NOT NULL
+                BEGIN
+                    DROP TABLE [LogError];
+                END;
+            ");
 
-            migrationBuilder.CreateTable(
-                name: "Logs",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MessageTemplate = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Level = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: true),
-                    TimeStamp = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    Exception = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Properties = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LogEvent = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Logs", x => x.Id);
-                });
+            // Usa un blocco SQL per creare Logs solo se non esiste
+            migrationBuilder.Sql(@"
+                IF OBJECT_ID(N'Logs', N'U') IS NULL
+                BEGIN
+                    CREATE TABLE [Logs] (
+                        [Id] int NOT NULL IDENTITY,
+                        [Message] nvarchar(max) NOT NULL,
+                        [MessageTemplate] nvarchar(max) NOT NULL,
+                        [Level] nvarchar(128) NULL,
+                        [TimeStamp] datetimeoffset NOT NULL,
+                        [Exception] nvarchar(max) NULL,
+                        [Properties] nvarchar(max) NULL,
+                        [LogEvent] nvarchar(max) NULL,
+                        CONSTRAINT [PK_Logs] PRIMARY KEY ([Id])
+                    );
+                END;
+            ");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Logs");
+            // Usa un blocco SQL per eliminare Logs solo se esiste
+            migrationBuilder.Sql(@"
+                IF OBJECT_ID(N'Logs', N'U') IS NOT NULL
+                BEGIN
+                    DROP TABLE [Logs];
+                END;
+            ");
 
-            migrationBuilder.CreateTable(
-                name: "LogError",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ActionName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    ClassName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    Line = table.Column<int>(type: "int", nullable: false),
-                    Message = table.Column<string>(type: "text", nullable: false),
-                    MethodName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Time = table.Column<DateTime>(type: "datetime", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("logerror_id_primary", x => x.Id);
-                });
+            // Usa un blocco SQL per ricreare LogError solo se non esiste
+            migrationBuilder.Sql(@"
+                IF OBJECT_ID(N'LogError', N'U') IS NULL
+                BEGIN
+                    CREATE TABLE [LogError] (
+                        [Id] int NOT NULL IDENTITY,
+                        [ActionName] nvarchar(50) NOT NULL,
+                        [ClassName] nvarchar(255) NOT NULL,
+                        [Line] int NOT NULL,
+                        [Message] text NOT NULL,
+                        [MethodName] nvarchar(50) NOT NULL,
+                        [Time] datetime NOT NULL,
+                        CONSTRAINT [logerror_id_primary] PRIMARY KEY ([Id])
+                    );
+                END;
+            ");
         }
     }
 }

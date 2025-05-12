@@ -19,8 +19,6 @@ public partial class AdventureWorksDataContext : DbContext
 
     public virtual DbSet<CustomerData> CustomerData { get; set; }
 
-    public virtual DbSet<Log> Logs { get; set; }
-
     public virtual DbSet<Role> Roles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -50,20 +48,6 @@ public partial class AdventureWorksDataContext : DbContext
             entity.Property(e => e.PasswordHash).HasMaxLength(256);
             entity.Property(e => e.PasswordSalt).HasMaxLength(40);
             entity.Property(e => e.PhoneNumber).HasMaxLength(255);
-        });
-
-        modelBuilder.Entity<Log>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.ToTable("Logs");
-
-            entity.Property(e => e.Message).IsRequired().HasColumnType("nvarchar(max)");
-            entity.Property(e => e.MessageTemplate).IsRequired().HasColumnType("nvarchar(max)");
-            entity.Property(e => e.Level).HasMaxLength(128);
-            entity.Property(e => e.TimeStamp).HasColumnType("datetimeoffset").IsRequired();
-            entity.Property(e => e.Exception).HasColumnType("nvarchar(max)");
-            entity.Property(e => e.Properties).HasColumnType("nvarchar(max)");
-            entity.Property(e => e.LogEvent).HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<Role>(entity =>
