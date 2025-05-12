@@ -11,6 +11,7 @@ using System.Text.Json.Serialization;
 using Serilog;
 using RideWild.Models;
 using Microsoft.AspNetCore.Diagnostics;
+using System.Security.Claims;
 
 namespace RideWild
 {
@@ -38,11 +39,20 @@ namespace RideWild
                         ValidateIssuerSigningKey = true,
                         ValidIssuer = jwtSettings.Issuer,
                         ValidAudience = jwtSettings.Audience,
+                        RoleClaimType = ClaimTypes.Role,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
                         ClockSkew = TimeSpan.FromMinutes(1)
 
                     };
                 });
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("Admin", policy =>
+                {
+                    policy.RequireClaim(ClaimTypes.Role, "Admin");
+                });
+            });
 
             builder.Services.AddControllers();
 

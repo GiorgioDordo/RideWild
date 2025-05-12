@@ -196,5 +196,28 @@ namespace RideWild.Controllers
         {
             return _context.Customers.Any(e => e.CustomerId == id);
         }
+
+        /*
+         * Get All Custumers
+         */
+        [Authorize(Policy = "Admin")]
+        [HttpGet("GetAllCustomers")]
+        public async Task<ActionResult<IEnumerable<CustomerDTO>>> GetAllCustomers()
+        {
+            var customers = await _context.Customers
+                .Select(c => new CustomerDTO
+                {
+                    NameStyle = c.NameStyle,
+                    Title = c.Title,
+                    FirstName = c.FirstName,
+                    MiddleName = c.MiddleName,
+                    LastName = c.LastName,
+                    Suffix = c.Suffix,
+                    CompanyName = c.CompanyName,
+                    SalesPerson = c.SalesPerson,
+                })
+                .ToListAsync();
+            return Ok(customers);
+        }
     }
 }
