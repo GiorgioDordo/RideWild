@@ -95,6 +95,31 @@ namespace RideWild.Controllers
         }
 
         /*
+         * PUT: /Customers/ModifyAddress
+         * Change the address with addressId=id of the customer that use the API
+         */
+        [Authorize]
+        [HttpPut("ModifyAddress")]
+        public async Task<IActionResult> ModifyAddress(AddressDTO addressDTO)
+        {
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
+            var customerAddress = await _context.CustomerAddresses
+                .Include(ca => ca.Address)
+                .FirstOrDefaultAsync(ca => ca.CustomerId == userId && ca.AddressId == addressDTO.AddressId);
+            if (customerAddress == null)
+                return NotFound("Indirizzo non trovato o non autorizzato");
+            customerAddress.Address.AddressLine1 = addressDTO.AddressLine1;
+            customerAddress.Address.AddressLine2 = addressDTO.AddressLine2;
+            customerAddress.Address.City = addressDTO.City;
+            customerAddress.Address.StateProvince = addressDTO.StateProvince;
+            customerAddress.Address.CountryRegion = addressDTO.CountryRegion;
+            customerAddress.Address.PostalCode = addressDTO.PostalCode;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        /*
          * DELETE: /Customers/DeleteAddress/id
          * Delete the address with addressId=id of the customer that use the API
          */
@@ -196,5 +221,83 @@ namespace RideWild.Controllers
         {
             return _context.Customers.Any(e => e.CustomerId == id);
         }
+
+        /*
+         * Get All Custumers
+         */
+        [Authorize(Policy = "Admin")]
+        [HttpGet("GetAllCustomers")]
+        public async Task<ActionResult<IEnumerable<CustomerDTO>>> GetAllCustomers()
+        {
+            var customers = await _context.Customers
+                .Select(c => new CustomerDTO
+                {
+                    NameStyle = c.NameStyle,
+                    Title = c.Title,
+                    FirstName = c.FirstName,
+                    MiddleName = c.MiddleName,
+                    LastName = c.LastName,
+                    Suffix = c.Suffix,
+                    CompanyName = c.CompanyName,
+                    SalesPerson = c.SalesPerson,
+                })
+                .ToListAsync();
+            return Ok(customers);
+        }
+
+        /*
+         * Get customer by id
+         */
+        [Authorize(Policy = "Admin")]
+        [HttpGet("GetCustomerById/{id}")]
+        public async Task<ActionResult<CustomerDTO>> GetCustomerById(int id)
+        {
+            var customer = await _context.Customers
+                .Where(c => c.CustomerId == id)
+                .Select(c => new CustomerDTO
+                {
+                    NameStyle = c.NameStyle,
+                    Title = c.Title,
+                    FirstName = c.FirstName,
+                    MiddleName = c.MiddleName,
+                    LastName = c.LastName,
+                    Suffix = c.Suffix,
+                    CompanyName = c.CompanyName,
+                    SalesPerson = c.SalesPerson,
+                })
+                .FirstOrDefaultAsync();
+            if (customer == null)
+            {
+                return NotFound("Cliente non trovato");
+            }
+            return Ok(customer);
+        }
+
+        /*
+         * Get Addresses by customer id
+         */
+        [Authorize(Policy = "Admin")]
+        [HttpGet("GetAddressesByCustomerId/{id}")]
+        public async Task<ActionResult<List<AddressDTO>>> GetAddressesByCustomerId(int id)
+        {
+            var addresses = await _context.CustomerAddresses
+                .Where(ca => ca.CustomerId == id)
+                .Include(ca => ca.Address)
+                .Select(ca => new AddressDTO
+                {
+                    AddressId = ca.AddressId,
+                    AddressLine1 = ca.Address.AddressLine1,
+                    AddressLine2 = ca.Address.AddressLine2,
+                    City = ca.Address.City,
+                    StateProvince = ca.Address.StateProvince,
+                    CountryRegion = ca.Address.CountryRegion,
+                    PostalCode = ca.Address.PostalCode,
+                    AddressType = ca.AddressType
+                })
+                .ToListAsync();
+            return Ok(addresses);
+        }
+
+
     }
 }

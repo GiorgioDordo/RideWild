@@ -74,7 +74,33 @@ namespace RideWild.Services
 
                 if (oldCustumer == null)
                 {
-                    return AuthResult.FailureAuth("Account inesistente");
+                    var AuthUser = await _contextData.AuthUsers
+                        .Where(c => c.EmaiAddress == email)
+                        .Include(c => c.Role)
+                        .FirstOrDefaultAsync();
+                    if (AuthUser == null)
+                    {
+                        return AuthResult.FailureAuth("Email non registrata");
+                    }
+                    else
+                    {
+                        var isValid = SecurityLib.PasswordUtility.VerifyPassword(password, AuthUser.PasswordHash, AuthUser.PasswordSalt);
+                        if (isValid)
+                        {
+                            string jwt = GenerateAdminJwtToken(AuthUser.Id.ToString(), AuthUser.Role.Name);
+                            /*
+                            string refreshToken = GenerateRefreshToken();
+                            AuthUser.RefreshToken = refreshToken;
+                            AuthUser.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);*/
+                            //await _contextData.SaveChangesAsync();
+                            return AuthResult.SuccessAuth(jwt, "");
+                        }
+                        else
+                        {
+                            return AuthResult.FailureAuth("Password errata");
+                        }
+                    }
+
                 }
                 else
                 {
@@ -310,7 +336,7 @@ namespace RideWild.Services
             }
         }
 
-        private string GenerateJwtToken(String id)
+        private string GenerateJwtToken(string id)
         {
             var secretKey = _jwtSettings.SecretKey;
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -332,7 +358,30 @@ namespace RideWild.Services
 
             return jwt;
         }
-        private string GenerateJwtTokenResetPwd(String email)
+        private string GenerateAdminJwtToken(string id, string role)
+        {
+            var secretKey = _jwtSettings.SecretKey;
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(secretKey);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, id),
+                    new Claim(ClaimTypes.Role, role)
+                }),
+                Expires = DateTime.Now.AddMinutes(_jwtSettings.ExpirationMinutes),
+                Issuer = _jwtSettings.Issuer,
+                Audience = _jwtSettings.Audience,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var jwt = tokenHandler.WriteToken(token);
+
+            return jwt;
+        }
+        private string GenerateJwtTokenResetPwd(string email)
         {
             var secretKey = _configuration["JwtSettings:SecretKey"];
             var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey));
