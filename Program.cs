@@ -12,6 +12,7 @@ using Serilog;
 using RideWild.Models;
 using Microsoft.AspNetCore.Diagnostics;
 using System.Security.Claims;
+using RideWild.Models.MongoModels;
 
 namespace RideWild
 {
@@ -20,9 +21,11 @@ namespace RideWild
     {
         public static void Main(string[] args)
         {
-            
-
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.Configure<ReviewsDbConfig>(
+                builder.Configuration.GetSection("ReviewsCollectionDB"));
+            builder.Services.AddSingleton<ReviewsDbConfig>();
 
             JwtSettings jwtSettings = new();
             jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
