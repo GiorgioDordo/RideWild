@@ -5,8 +5,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 using RideWild.DTO;
 using RideWild.Models.AdventureModels;
+using RideWild.Models.MongoModels;
 
 namespace RideWild.Controllers
 {
@@ -15,11 +18,15 @@ namespace RideWild.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly AdventureWorksLt2019Context _context;
+        private IMongoCollection<Review> _reviewsCollection;
 
-
-        public ProductsController(AdventureWorksLt2019Context context)
+        public ProductsController(AdventureWorksLt2019Context context, IOptions<ReviewsDbConfig> options)
         {
             _context = context;
+
+            var client = new MongoClient(options.Value.ConnectionString);
+            var database = client.GetDatabase(options.Value.DatabaseName);
+            _reviewsCollection = database.GetCollection<Review>(options.Value.CollectionName);
         }
         
         // GET: api/Products
@@ -49,6 +56,42 @@ namespace RideWild.Controllers
 
             return product;
         }
+
+        // GET: api/Products/search
+        [HttpGet("search/{searchValue}")]
+        public async Task<ActionResult<IEnumerable<ProductAndReviews>>> SearchProductByName(string searchValue)
+        {
+            // controllo che searchValue sia valido
+            if(searchValue == "" || searchValue == null)
+            {
+                return BadRequest("Inserisci un valore di ricerca");
+            }
+
+            // cerca
+            var products = await _context.Products.Where(p => p.Name.ToUpper().Contains(searchValue.ToUpper())).ToListAsync();
+
+            if(products.Count == 0)
+            {
+                return NotFound("Nessun risultato di ricerca");
+            }
+
+            List<ProductAndReviews> productsList = [];
+
+            // ciclo prodotti e aggiunta recensioni
+            foreach(var product in products )
+            {
+                ProductAndReviews productAndReviews = new();
+
+                productAndReviews.Name = product.Name;
+                productAndReviews.Reviews = await _reviewsCollection.Find(review => review.ProductId == product.ProductId).ToListAsync();
+
+                productsList.Add(productAndReviews);
+            }
+
+            return Ok(productsList);
+        }
+
+
 
         // PUT: api/Products/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
