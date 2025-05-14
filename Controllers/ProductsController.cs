@@ -83,7 +83,7 @@ namespace RideWild.Controllers
                 ProductAndReviews productAndReviews = new();
 
                 productAndReviews.Name = product.Name;
-                productAndReviews.Reviews = await _reviewsCollection.Find(review => review.ProductId == product.ProductId).ToListAsync();
+                productAndReviews.Reviews = await _reviewsCollection.Find(review => review.ProductId == product.ProductId).SortByDescending(r => r.Rating).ToListAsync();
 
                 productsList.Add(productAndReviews);
             }
