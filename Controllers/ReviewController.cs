@@ -45,6 +45,7 @@ namespace RideWild.Controllers
             {
                 return BadRequest("Car cannot be null");
             }
+
             await reviewsCollection.InsertOneAsync(review);
 
             return CreatedAtAction(nameof(GetReviewsByProductId), new { id = review.Id }, review);
@@ -61,12 +62,14 @@ namespace RideWild.Controllers
             {
                 return NotFound();
             }
+
             review.Title = reviewDto.Title;
             review.Text = reviewDto.Text;
             review.CreatedOn = DateTime.Now;
             review.Rating = reviewDto.Rating;
 
             await reviewsCollection.ReplaceOneAsync(r => r.Id == id, review);
+
             return NoContent();
         }
 
@@ -76,10 +79,12 @@ namespace RideWild.Controllers
         {
             var review = await reviewsCollection.Find(r => r.Id == id)
                 .FirstOrDefaultAsync();
+
             if (review == null)
             {
                 return NotFound();
             }
+
             await reviewsCollection.DeleteOneAsync(r => r.Id == id);
             
             return Ok("Review deleted");
