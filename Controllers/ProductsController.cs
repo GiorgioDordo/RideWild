@@ -41,6 +41,30 @@ namespace RideWild.Controllers
             return Ok(products);
         }
 
+
+        // GET: api/Products/ordered
+        [HttpGet("OrderedByPrice")]
+        public async Task<ActionResult<IEnumerable<Product>>> GetProducts(
+            int page = 1,
+            int pageSize = 15,
+            string sortOrder = "asc")
+        {
+            IQueryable<Product> query = _context.Products;
+
+            // Apply ordering
+            query = sortOrder.ToLower() == "desc"
+                ? query.OrderByDescending(p => p.ListPrice)
+                : query.OrderBy(p => p.ListPrice);
+
+            // Apply pagination
+            var products = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Ok(products);
+        }
+
         // GET: api/ProductCatergory
         //[HttpGet]
         //public async Task<ActionResult<IEnumerable<ProductCategory>>> GetProductCategory()
