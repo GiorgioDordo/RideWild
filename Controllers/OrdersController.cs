@@ -24,9 +24,9 @@ namespace RideWild.Controllers
         }
 
 
-        // mostra lista ordini
+        // mostra lista ordini CON PAGINAZIONE
         // USE: ADMIN DASHBOARD
-        [Authorize]
+        [Authorize(Policy = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllOrders(int page = 1, int pageSize = 20)
         {
@@ -36,6 +36,7 @@ namespace RideWild.Controllers
             var orders = await _context.SalesOrderHeaders
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
 
             return Ok(orders);
@@ -44,16 +45,17 @@ namespace RideWild.Controllers
         // mostra gli ordini per customerId
         // USE: USER DASHBOARD O ADMIN DASHBOARD FILTER
         [Authorize]
-        [HttpGet("customer/{customerId}")]
-        public async Task<IActionResult> GetOrdersByCustomer(int customerId, int page = 1, int pageSize = 20)
+        [HttpGet("customer/")]
+        public async Task<IActionResult> GetOrdersByCustomer()
         {
             if (!Helper.TryGetUserId(User, out int userId))
                 return Unauthorized("Utente non autenticato o ID non valido");
 
             var orders = await _context.SalesOrderHeaders
-                .Where(o => o.CustomerId == customerId)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Where(o => o.CustomerId == userId)
+                //.Skip((page - 1) * pageSize)
+                //.Take(pageSize)
+                .OrderByDescending(o => o.OrderDate)
                 .ToListAsync();
 
             return Ok(orders);
@@ -70,9 +72,12 @@ namespace RideWild.Controllers
 
             var order = await _context.SalesOrderHeaders
                 .Include(o => o.SalesOrderDetails)
+                    .ThenInclude(d => d.Product)
+                .Include(o => o.ShipToAddress)
+                .Include(o => o.BillToAddress)
                 .FirstOrDefaultAsync(o => o.SalesOrderId == orderId);
 
-            if(order == null)
+            if (order == null)
             {
                 return NotFound($"Ordine con ID {orderId} non trovato.");
             }
@@ -92,7 +97,7 @@ namespace RideWild.Controllers
             // creo il sales order header dal dto
             var newOrder = new SalesOrderHeader
             {
-                CustomerId = orderDto.CustomerId,
+                CustomerId = userId,
                 ShipToAddressId = orderDto.ShipToAddressId, // se non è corretto genera eccezione
                 BillToAddressId = orderDto.BillToAddressId, // se non è corretto genera eccezione
                 OrderDate = orderDto.OrderDate,
@@ -138,7 +143,7 @@ namespace RideWild.Controllers
 
         // modifica ordine
         // USE: ADMIN DASHBOARD
-        [Authorize]
+        [Authorize(Policy = "Admin")]
         [HttpPut("{orderId}")]
         public async Task<IActionResult> UpdateOrder(int orderId, OrderDTO updateOrderDto)
         {
@@ -155,7 +160,6 @@ namespace RideWild.Controllers
                 return NotFound($"Ordine con ID {orderId} non trovato.");
 
             // aggiorna sales header
-            orderToUpdate.CustomerId = updateOrderDto.CustomerId;
             orderToUpdate.OrderDate = updateOrderDto.OrderDate;
             orderToUpdate.ShipMethod = updateOrderDto.ShipMethod;
             orderToUpdate.Comment = updateOrderDto.Comment;
@@ -205,7 +209,7 @@ namespace RideWild.Controllers
 
 
         // chiamata patch per spedizione partita
-        [Authorize]
+        [Authorize(Policy = "Admin")]
         [HttpPatch("status")]
         public async Task<ActionResult<SalesOrderHeader>> PatchOrderStatus([FromBody] UpdateOrderStatusDTO updateOrderStatusDTO)
         {
@@ -253,7 +257,7 @@ namespace RideWild.Controllers
 
         // cancella ordine 
         // USE: ADMIN DASHBOARD
-        [Authorize]
+        [Authorize(Policy = "Admin")]
         [HttpDelete("{orderId}")]
         public async Task<IActionResult> DeleteOrder(int orderId)
         {
@@ -277,6 +281,5 @@ namespace RideWild.Controllers
 
             return Ok("");
         }
-
     }
 }
