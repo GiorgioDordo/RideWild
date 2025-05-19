@@ -31,9 +31,14 @@ namespace RideWild.Controllers
         
         // GET: api/Products
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<Product>>> GetProducts(int page = 1, int pageSize = 15)
         {
-            return await _context.Products.ToListAsync();
+            var products = await _context.Products
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Ok(products);
         }
 
         // GET: api/ProductCatergory
