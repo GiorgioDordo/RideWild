@@ -34,6 +34,7 @@ namespace RideWild.Controllers
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts(int page = 1, int pageSize = 15)
         {
             var products = await _context.Products
+                .Include(p => p.ProductCategory)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -41,20 +42,90 @@ namespace RideWild.Controllers
             return Ok(products);
         }
 
+        // GET: api/Products/Bestseller
+        [HttpGet("Bestseller")]
 
-        // GET: api/Products/ordered
+        public async Task<ActionResult<IEnumerable<SalesOrderDetail>>> GetBestsellerProducts(int page = 1, int pageSize = 15)
+        {
+            // Seleziono solo il ProductID e OrderQty
+            // con new creo un nuovo oggetto anonimo con all'interno i due parametri 
+            var orders = await _context.SalesOrderDetails
+                .Select(so => new
+                {
+                    ProductId = so.ProductId,
+                    OrderQty = so.OrderQty
+                })
+                .OrderByDescending(o=> o.OrderQty) 
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            return Ok(orders);
+        }
+        //----------------------------------------------------------------------------------------------------------------------------------------------//
+        // GET: api/Products/Categories
+        [HttpGet("Categories")]
+        public async Task<ActionResult<IEnumerable<ProductCategory>>> GetProductCategories()
+        {
+            var categories = await _context.ProductCategories.ToListAsync();
+            return Ok(categories);
+        }
+
+        // GET: api/Products/ByCategory/5
+        [HttpGet("ByCategory/{categoryId}")]
+        public async Task<ActionResult<IEnumerable<Product>>> GetProductsByCategory(
+            int categoryId,
+            int page = 1,
+            int pageSize = 15)
+        {
+            var products = await _context.Products
+                .Include(p => p.ProductCategory)
+                .Where(p => p.ProductCategoryId == categoryId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Ok(products);
+        }
+//-----------------------------------------------------------------------------------------------------------------------------------------------//
+
+
+
+        // GET: api/Products/OrderedByPrice
         [HttpGet("OrderedByPrice")]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts(
+        public async Task<ActionResult<IEnumerable<Product>>> GetProductsByPrice(
             int page = 1,
             int pageSize = 15,
             string sortOrder = "asc")
         {
-            IQueryable<Product> query = _context.Products;
+            IQueryable<Product> query = _context.Products.Include(p => p.ProductCategory);
 
             // Apply ordering
             query = sortOrder.ToLower() == "desc"
                 ? query.OrderByDescending(p => p.ListPrice)
                 : query.OrderBy(p => p.ListPrice);
+
+            // Apply pagination
+            var products = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Ok(products);
+        }
+
+        // GET: api/Products/OrderedByNewest
+        [HttpGet("OrderedByNewest")]
+        public async Task<ActionResult<IEnumerable<Product>>> GetProductsNewest(
+            int page = 1,
+            int pageSize = 15,
+            string sortOrder = "asc")
+        {
+            IQueryable<Product> query = _context.Products.Include(p => p.ProductCategory);
+
+            // Apply ordering
+            query = sortOrder.ToLower() == "desc"
+                ? query.OrderByDescending(p => p.ModifiedDate)
+                : query.OrderBy(p => p.ModifiedDate);
 
             // Apply pagination
             var products = await query
@@ -183,7 +254,7 @@ namespace RideWild.Controllers
             //return CreatedAtAction(nameof(GetProduct), new { id = product.ProductId }, product); ;
         }
 
-        // POST: api/Products
+        // to make a post the url is /api/products
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Product>> PostProduct(ProductDTO productDTO)

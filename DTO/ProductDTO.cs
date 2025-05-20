@@ -31,7 +31,9 @@ namespace RideWild.DTO
         [Required]
         [Range(typeof(DateTime), "1753/1/1", "9999/12/31", ErrorMessage = "SellStartDate must be between 1/1/1753 and 12/31/9999.")]
         public DateTime SellStartDate { get; set; }
+
         public byte[]? ThumbNailPhoto { get; set; }
+
         public string? ThumbnailPhotoFileName { get; set; }
     }
 }
