@@ -61,37 +61,19 @@ namespace RideWild.Controllers
             _context.CustomerAddresses.Add(customerAddress);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetAddressById", new { id = address.AddressId }, address);
-        }
+            AddressDTO response = new AddressDTO
+            {
+                AddressId = address.AddressId,
+                AddressLine1 = address.AddressLine1,
+                AddressLine2 = address.AddressLine2,
+                City = address.City,
+                StateProvince = address.StateProvince,
+                CountryRegion = address.CountryRegion,
+                PostalCode = address.PostalCode,
+                AddressType = customerAddress.AddressType
+            };
 
-        /*
-         * GET: /Customers/GetAddressById/id
-         * Get the address with addressId=id of the customer that use the API
-         */
-        [Authorize]
-        [HttpGet("GetAddressById/{id}")]
-        public async Task<ActionResult<AddressDTO>> GetAddressById(int id)
-        {
-            if (!Helper.TryGetUserId(User, out int userId))
-                return Unauthorized("Utente non autenticato o ID non valido");
-            var customerAddress = await _context.CustomerAddresses
-                .Where(ca => ca.CustomerId == userId && ca.AddressId == id)
-                .Include(ca => ca.Address)
-                .Select(ca => new AddressDTO
-                {
-                    AddressId = ca.AddressId,
-                    AddressLine1 = ca.Address.AddressLine1,
-                    AddressLine2 = ca.Address.AddressLine2,
-                    City = ca.Address.City,
-                    StateProvince = ca.Address.StateProvince,
-                    CountryRegion = ca.Address.CountryRegion,
-                    PostalCode = ca.Address.PostalCode,
-                    AddressType = ca.AddressType
-                })
-                .FirstOrDefaultAsync();
-            if (customerAddress == null)
-                return NotFound("Indirizzo non trovato o non autorizzato");
-            return Ok(customerAddress);
+            return Ok(response);
         }
 
         /*
