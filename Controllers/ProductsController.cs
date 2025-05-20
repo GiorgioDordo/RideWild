@@ -44,23 +44,19 @@ namespace RideWild.Controllers
 
         // GET: api/Products/Bestseller
         [HttpGet("Bestseller")]
-
         public async Task<ActionResult<IEnumerable<SalesOrderDetail>>> GetBestsellerProducts(int page = 1, int pageSize = 15)
         {
-            // Seleziono solo il ProductID e OrderQty
-            // con new creo un nuovo oggetto anonimo con all'interno i due parametri 
-            var orders = await _context.SalesOrderDetails
-                .Select(so => new
-                {
-                    ProductId = so.ProductId,
-                    OrderQty = so.OrderQty
-                })
-                .OrderByDescending(o=> o.OrderQty) 
+            var bestsellers = await _context.SalesOrderDetails
+                .Include(so => so.Product)
+                .OrderByDescending(so => so.OrderQty)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
-            return Ok(orders);
+            return Ok(bestsellers);
         }
+
+
+
         //----------------------------------------------------------------------------------------------------------------------------------------------//
         // GET: api/Products/Categories
         [HttpGet("Categories")]
