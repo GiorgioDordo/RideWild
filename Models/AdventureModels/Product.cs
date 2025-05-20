@@ -77,6 +77,8 @@ public partial class Product
     /// Small image of the product.
     /// </summary>
     public byte[]? ThumbNailPhoto { get; set; }
+    public string? ThumbNailPhotoBase64 =>
+    ThumbNailPhoto != null ? Convert.ToBase64String(ThumbNailPhoto) : null;
 
     /// <summary>
     /// Small image file name.
