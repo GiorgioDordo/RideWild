@@ -47,9 +47,9 @@ namespace RideWild.Controllers
 
         public async Task<ActionResult<IEnumerable<SalesOrderDetail>>> GetBestsellerProducts(int page = 1, int pageSize = 15)
         {
-            var bestsellers = await _context.SalesOrderDetails
-                // Seleziono solo il ProductID e OrderQty
-                // con new creo un nuovo oggetto anonimo con all'interno i due parametri 
+            // Seleziono solo il ProductID e OrderQty
+            // con new creo un nuovo oggetto anonimo con all'interno i due parametri 
+            var orders = await _context.SalesOrderDetails
                 .Select(so => new
                 {
                     ProductId = so.ProductId,
@@ -59,19 +59,7 @@ namespace RideWild.Controllers
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
-
-            var productIds = bestsellers.Select(b => b.ProductId).ToList();
-
-            var products = await _context.Products
-                .Where(p => productIds.Contains(p.ProductId))
-                .Include(p => p.ProductCategory)
-                .ToListAsync();
-
-            var productsOrdered = productIds
-                .Select(id => products.First(p => p.ProductId == id))
-                .ToList();
-
-            return Ok(productsOrdered);
+            return Ok(orders);
         }
         //----------------------------------------------------------------------------------------------------------------------------------------------//
         // GET: api/Products/Categories
