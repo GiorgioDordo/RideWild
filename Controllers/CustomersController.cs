@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using RideWild.Utility;
+using System.Net;
 
 namespace RideWild.Controllers
 {
@@ -128,7 +129,18 @@ namespace RideWild.Controllers
             customerAddress.Address.CountryRegion = addressDTO.CountryRegion;
             customerAddress.Address.PostalCode = addressDTO.PostalCode;
             await _context.SaveChangesAsync();
-            return NoContent();
+            AddressDTO response = new AddressDTO
+            {
+                AddressId = customerAddress.AddressId,
+                AddressLine1 = customerAddress.Address.AddressLine1,
+                AddressLine2 = customerAddress.Address.AddressLine2,
+                City = customerAddress.Address.City,
+                StateProvince = customerAddress.Address.StateProvince,
+                CountryRegion = customerAddress.Address.CountryRegion,
+                PostalCode = customerAddress.Address.PostalCode,
+                AddressType = customerAddress.AddressType
+            };
+            return Ok(response);
         }
 
         /*
