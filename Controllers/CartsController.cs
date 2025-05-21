@@ -59,11 +59,7 @@ namespace RideWild.Controllers
 
             var total = items.Sum(i => i.TotalPrice);
 
-            return Ok(new 
-            {
-                Items = items,
-                Total = total
-            });
+            return Ok(items);
         }
 
 
@@ -101,7 +97,7 @@ namespace RideWild.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok("Carrello aggiornato");
+            return Ok(new { message = "Carrello aggiornato", success = true });
         }
 
 
@@ -182,7 +178,7 @@ namespace RideWild.Controllers
             _context.CartItems.RemoveRange(cart.CartItems);
             await _context.SaveChangesAsync();
 
-            return Ok("Carrello svuotato");
+            return Ok(new { message = "Carrello svuotato" });
         }
 
 
@@ -210,7 +206,7 @@ namespace RideWild.Controllers
             _context.CartItems.Remove(itemToRemove);
             await _context.SaveChangesAsync();
 
-            return Ok("Prodotto rimosso dal carrello");
+            return Ok(new { message = "Prodotto rimosso dal carrello" });
         }
     }
 }
