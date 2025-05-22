@@ -55,6 +55,9 @@ namespace RideWild.Controllers
                     OrderQty = g.Sum(so => so.OrderQty),
                     ProductName = g.Select(so => so.Product.Name).FirstOrDefault(),
                     ProductImage = g.Select(so => so.Product.ThumbNailPhoto).FirstOrDefault(),
+                    ProductPrice = g.Select(so => so.Product.ListPrice).FirstOrDefault(),
+                    ProductCategory = g.Select(so => so.Product.ProductCategory.Name).FirstOrDefault(),
+
                 })
                 .OrderByDescending(g => g.OrderQty)
                 .Skip((page - 1) * pageSize)
