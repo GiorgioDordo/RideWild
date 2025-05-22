@@ -48,7 +48,15 @@ namespace RideWild.Controllers
         {
             var bestsellers = await _context.SalesOrderDetails
                 .Include(so => so.Product)
-                .OrderByDescending(so => so.OrderQty)
+                .GroupBy(so => so.ProductId)
+                .Select(g => new
+                {
+                    ProductId = g.Key,
+                    OrderQty = g.Sum(so => so.OrderQty),
+                    ProductName = g.Select(so => so.Product.Name).FirstOrDefault(),
+                    ProductImage = g.Select(so => so.Product.ThumbNailPhoto).FirstOrDefault(),
+                })
+                .OrderByDescending(g => g.OrderQty)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
