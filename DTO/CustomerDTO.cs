@@ -2,6 +2,7 @@
 {
     public class CustomerDTO
     {
+        public int? CustomerId { get; set; }
         public bool NameStyle { get; set; }
 
         public string? Title { get; set; }
