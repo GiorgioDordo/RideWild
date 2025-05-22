@@ -239,6 +239,32 @@ namespace RideWild.Controllers
         }
 
         /*
+         * PUT: /Customers/ModifyPsw
+         * Change the password of the customer that use the API
+         */
+        [Authorize]
+        [HttpPut("ModifyPsw")]
+        public async Task<IActionResult> ModifyPsw(UpdatePswDTO modifyPswDTO)
+        {
+            if (!Helper.TryGetUserId(User, out int userId))
+                return Unauthorized("Utente non autenticato o ID non valido");
+            var customer = await _contextData.CustomerData
+                .FirstOrDefaultAsync(ca => ca.Id == userId);
+            if (customer == null)
+                return NotFound("Cliente non trovato");
+
+            if (!SecurityLib.PasswordUtility.VerifyPassword(modifyPswDTO.OldPassword, customer.PasswordHash, customer.PasswordSalt))     
+            {
+                return BadRequest("La password attuale non è corretta");
+            }
+            var newPsw = SecurityLib.PasswordUtility.HashPassword(modifyPswDTO.NewPassword);
+            customer.PasswordHash = newPsw.Hash;
+            customer.PasswordSalt = newPsw.Salt;
+            await _contextData.SaveChangesAsync();
+            return Ok("Password modificata con successo");
+        }
+
+        /*
          * Check if the customer exists
          */
         private bool CustomerExists(int id)
