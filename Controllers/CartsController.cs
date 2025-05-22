@@ -122,7 +122,7 @@ namespace RideWild.Controllers
             {
                 cart = new Cart
                 {
-                    CustomerId = addCartItemDTO.CustomerId
+                    CustomerId = userId
                 };
                 _context.Carts.Add(cart);
                 await _context.SaveChangesAsync();
