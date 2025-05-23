@@ -14,6 +14,7 @@ using System.Security.Claims;
 using Microsoft.Extensions.Configuration.UserSecrets;
 using RideWild.Utility;
 using System.Net;
+using RideWild.Interfaces;
 
 namespace RideWild.Controllers
 {
@@ -23,11 +24,25 @@ namespace RideWild.Controllers
     {
         private readonly AdventureWorksLt2019Context _context;
         private readonly AdventureWorksDataContext _contextData;
+        private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
+        private readonly IAuthService _authService;
+        private readonly string AngularUrl;
+        private readonly string AngularPort;
 
-        public CustomersController(AdventureWorksLt2019Context context, AdventureWorksDataContext contextData)
+        public CustomersController(AdventureWorksLt2019Context context, 
+            AdventureWorksDataContext contextData, 
+            IConfiguration configuration, 
+            IEmailService emailService,
+            IAuthService authService)
         {
             _context = context;
             _contextData = contextData;
+            _configuration = configuration;
+            _emailService = emailService;
+            _authService = authService;
+            AngularUrl = _configuration["AngularSettings:Url"];
+            AngularPort = _configuration["AngularSettings:Port"];
         }
 
         /*
@@ -261,7 +276,17 @@ namespace RideWild.Controllers
             customer.PasswordHash = newPsw.Hash;
             customer.PasswordSalt = newPsw.Salt;
             await _contextData.SaveChangesAsync();
-            return Ok("Password modificata con successo");
+
+            var jwt = _authService.GenerateJwtTokenResetPwd(customer.EmailAddress);
+            var resetLink = $"{AngularUrl}{AngularPort}/reset-password?token={jwt}";
+            var subject = "ATTENZIONE MODIFICA PASSWORD";
+            var emailContent = $@"
+                        <p>La password è appena stata modificata, se non sei stato tu</p>
+                        <p>clicca sul link sottostante per reimpostare la password:</p>
+                        <p><a href=""{resetLink}"">{resetLink}</a></p>";
+            await _emailService.PswResetEmailAsync(customer.EmailAddress, subject, emailContent);
+
+            return Ok(new { message = "Password modificata con successo" });
         }
 
         /*

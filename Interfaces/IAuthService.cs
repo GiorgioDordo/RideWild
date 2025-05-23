@@ -14,5 +14,6 @@ namespace RideWild.Interfaces
         Task<AuthResult> ResetPasswordOldCustomer(ResetPasswordDTO resetPassword);
         Task<AuthResult> UpdatePassword(ResetPasswordDTO resetPassword);
         Task<AuthResult> RequestResetPsw(string email);
+        string GenerateJwtTokenResetPwd(string email);
     }
 }
