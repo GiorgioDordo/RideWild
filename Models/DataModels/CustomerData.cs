@@ -19,4 +19,11 @@ public partial class CustomerData
 
     public string RefreshToken { get; set; } = string.Empty;
     public DateTime RefreshTokenExpiresAt { get; set; } = DateTime.UtcNow;
+    public DateTime? LastPasswordChange { get; set; }
+
+    public bool IsMfaEnabled { get; set; } = false;
+
+    public string? MfaCode { get; set; }
+
+    public DateTime? MfaCodeExpiresAt { get; set; }
 }
