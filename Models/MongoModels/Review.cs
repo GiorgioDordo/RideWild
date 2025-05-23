@@ -21,5 +21,8 @@ namespace RideWild.Models.MongoModels
 
         [Range(1,5)]
         public int Rating { get; set; } = 0;
+
+        [BsonIgnoreIfNull]
+        public bool? IsPositive { get; set; }
     }
 }
