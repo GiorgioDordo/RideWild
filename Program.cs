@@ -13,6 +13,7 @@ using RideWild.Models;
 using Microsoft.AspNetCore.Diagnostics;
 using System.Security.Claims;
 using RideWild.Models.MongoModels;
+using AWLT2019.BLogic.SentimentTextAnalisys;
 
 namespace RideWild
 {
@@ -30,6 +31,9 @@ namespace RideWild
             JwtSettings jwtSettings = new();
             jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
             builder.Services.AddSingleton(jwtSettings);
+
+            SentimentCore sentimentCore = new();
+            builder.Services.AddSingleton(sentimentCore);
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
