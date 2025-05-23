@@ -48,6 +48,14 @@ public partial class AdventureWorksDataContext : DbContext
             entity.Property(e => e.PasswordHash).HasMaxLength(256);
             entity.Property(e => e.PasswordSalt).HasMaxLength(40);
             entity.Property(e => e.PhoneNumber).HasMaxLength(255);
+
+            entity.Property(e => e.LastPasswordChange).HasColumnType("datetime");
+
+            entity.Property(e => e.IsMfaEnabled).HasDefaultValue(false);
+
+            entity.Property(e => e.MfaCode).HasMaxLength(10);
+
+            entity.Property(e => e.MfaCodeExpiresAt).HasColumnType("datetime");
         });
 
         modelBuilder.Entity<Role>(entity =>
