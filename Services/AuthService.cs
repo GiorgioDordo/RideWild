@@ -20,9 +20,9 @@ namespace RideWild.Services
     {
 
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
         private readonly AdventureWorksLt2019Context _context;
         private readonly AdventureWorksDataContext _contextData;
-        private readonly IEmailService _emailService;
         private JwtSettings _jwtSettings;
         private readonly string AngularUrl;
         private readonly string AngularPort;
@@ -142,13 +142,28 @@ namespace RideWild.Services
                     return AuthResult.FailureAuth("Token non valido");
 
                 var userEmail = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+                var psw = SecurityLib.PasswordUtility.HashPassword(resetPassword.NewPassword);
                 var user = await _context.Customers
                     .FirstOrDefaultAsync(c => c.EmailAddress == userEmail);
 
-                if (user == null) 
-                    return AuthResult.FailureAuth("Utente non trovato");
+                if (user == null)
+                {
+                    var userNew = await _contextData.CustomerData
+                    .FirstOrDefaultAsync(c => c.EmailAddress == userEmail);
+                    if(userNew == null)
+                        return AuthResult.FailureAuth("Utente non trovato");
+                    else
+                    {
+                        string refreshTokenNew = GenerateRefreshToken();
+                        userNew.PasswordHash = psw.Hash;
+                        userNew.PasswordSalt = psw.Salt;
+                        userNew.RefreshToken = refreshTokenNew;
+                        userNew.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
 
-                var psw = SecurityLib.PasswordUtility.HashPassword(resetPassword.NewPassword);
+                        await _contextData.SaveChangesAsync();
+                        return AuthResult.SuccessOperation();
+                    }
+                }
 
                 string refreshToken = GenerateRefreshToken();
                 var customerData = new CustomerData
@@ -381,7 +396,7 @@ namespace RideWild.Services
 
             return jwt;
         }
-        private string GenerateJwtTokenResetPwd(string email)
+        public string GenerateJwtTokenResetPwd(string email)
         {
             var secretKey = _configuration["JwtSettings:SecretKey"];
             var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey));
