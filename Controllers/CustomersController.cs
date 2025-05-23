@@ -275,6 +275,8 @@ namespace RideWild.Controllers
             var newPsw = SecurityLib.PasswordUtility.HashPassword(modifyPswDTO.NewPassword);
             customer.PasswordHash = newPsw.Hash;
             customer.PasswordSalt = newPsw.Salt;
+            customer.LastPasswordChange = DateTime.UtcNow;
+            var newJwt = _authService.GenerateJwtToken(customer.Id.ToString(), customer.LastPasswordChange);
             await _contextData.SaveChangesAsync();
 
             var jwt = _authService.GenerateJwtTokenResetPwd(customer.EmailAddress);
@@ -286,7 +288,7 @@ namespace RideWild.Controllers
                         <p><a href=""{resetLink}"">{resetLink}</a></p>";
             await _emailService.PswResetEmailAsync(customer.EmailAddress, subject, emailContent);
 
-            return Ok(new { message = "Password modificata con successo" });
+            return Ok(new { message = "Password modificata con successo", token = newJwt });
         }
 
         /*

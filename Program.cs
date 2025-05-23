@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using System.Security.Claims;
 using RideWild.Models.MongoModels;
 using AWLT2019.BLogic.SentimentTextAnalisys;
+using RideWild.Utility;
 
 namespace RideWild
 {
@@ -128,8 +129,9 @@ namespace RideWild
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
+           
             app.UseAuthorization();
-
+            app.UseMiddleware<JwtPasswordChangeMiddleware>();
             app.MapControllers();
 
             app.Run();

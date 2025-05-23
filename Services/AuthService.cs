@@ -52,7 +52,7 @@ namespace RideWild.Services
                 var isValid = SecurityLib.PasswordUtility.VerifyPassword(password, customer.PasswordHash, customer.PasswordSalt);
                 if (isValid)
                 {
-                    string jwt = GenerateJwtToken(customer.Id.ToString());
+                    string jwt = GenerateJwtToken(customer.Id.ToString(), customer.LastPasswordChange);
                     string refreshToken = GenerateRefreshToken();
 
                     customer.RefreshToken = refreshToken;
@@ -159,6 +159,7 @@ namespace RideWild.Services
                         userNew.PasswordSalt = psw.Salt;
                         userNew.RefreshToken = refreshTokenNew;
                         userNew.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
+                        userNew.LastPasswordChange = DateTime.UtcNow;
 
                         await _contextData.SaveChangesAsync();
                         return AuthResult.SuccessOperation();
@@ -176,6 +177,7 @@ namespace RideWild.Services
                     AddressLine = "",
                     RefreshToken = refreshToken,
                     RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7),
+                    LastPasswordChange = DateTime.UtcNow,
                 };
                 _contextData.CustomerData.Add(customerData);
                 await _contextData.SaveChangesAsync();
@@ -255,6 +257,7 @@ namespace RideWild.Services
                 user.PasswordSalt = psw.Salt;
                 user.RefreshToken = refreshToken;
                 user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
+                user.LastPasswordChange = DateTime.UtcNow;
 
                 await _contextData.SaveChangesAsync();
 
@@ -274,7 +277,9 @@ namespace RideWild.Services
             if (user == null || user.RefreshTokenExpiresAt < DateTime.UtcNow)
                 return AuthResult.FailureAuth("Token non valido o scaduto");
 
-            var newAccessToken = GenerateJwtToken(user.Id.ToString());
+            user.LastPasswordChange = DateTime.UtcNow;
+
+            var newAccessToken = GenerateJwtToken(user.Id.ToString(), user.LastPasswordChange);
             var newRefreshToken = GenerateRefreshToken();
 
             user.RefreshToken = newRefreshToken;
@@ -343,6 +348,7 @@ namespace RideWild.Services
                     AddressLine = "",
                     RefreshToken = refreshToken,
                     RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7),
+                    LastPasswordChange = DateTime.UtcNow,
                 };
                 _contextData.CustomerData.Add(customerData);
                 await _contextData.SaveChangesAsync();
@@ -351,16 +357,20 @@ namespace RideWild.Services
             }
         }
 
-        private string GenerateJwtToken(string id)
+        public string GenerateJwtToken(string id, DateTime? lastPasswordChangeUtc)
         {
             var secretKey = _jwtSettings.SecretKey;
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(secretKey);
+            
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.NameIdentifier, id)
+                    new Claim(ClaimTypes.NameIdentifier, id),
+                    new Claim("lastPasswordChange", lastPasswordChangeUtc.Value.ToString("o"))
+
                 }),
                 Expires = DateTime.Now.AddMinutes(_jwtSettings.ExpirationMinutes),
                 Issuer = _jwtSettings.Issuer,
